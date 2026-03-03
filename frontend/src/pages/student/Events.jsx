@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageHeader, SearchInput, StatusBadge } from '../../components/ui';
 import { cn, formatDateTime } from '../../lib/utils';
-import { Calendar, MapPin, Clock, Users, ScanFace, CreditCard, ClipboardList } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ScanFace, CreditCard, ClipboardList, MapPinCheck } from 'lucide-react';
 
 const mockEvents = [
   { id: 1, title: 'Leadership Training Seminar', description: 'Annual leadership training for all student leaders and officers.', date: '2026-03-05T09:00:00', end_date: '2026-03-05T17:00:00', venue: 'Main Auditorium', status: 'upcoming', method: 'face_recognition', capacity: 200, organizer: 'CSG' },
@@ -12,8 +13,9 @@ const mockEvents = [
 ];
 
 const methodConfig = {
-  face_recognition: { icon: ScanFace, label: 'Face Recognition', color: 'text-purple-600 bg-purple-100' },
-  rfid: { icon: CreditCard, label: 'RFID', color: 'text-blue-600 bg-blue-100' },
+  face_recognition: { icon: ScanFace, label: 'Face Recognition', color: 'text-emerald-600 bg-emerald-100' },
+  rfid: { icon: CreditCard, label: 'RFID', color: 'text-emerald-600 bg-emerald-100' },
+  location: { icon: MapPinCheck, label: 'Location Tracking', color: 'text-emerald-600 bg-emerald-100' },
   manual: { icon: ClipboardList, label: 'Manual', color: 'text-slate-600 bg-slate-100' },
 };
 
@@ -67,7 +69,7 @@ export default function StudentEvents() {
               <div
                 className={cn(
                   'px-5 py-2 text-xs font-semibold uppercase tracking-wide',
-                  event.status === 'upcoming' ? 'bg-blue-500 text-white' :
+                  event.status === 'upcoming' ? 'bg-emerald-500 text-white' :
                   event.status === 'ongoing' ? 'bg-primary-500 text-white' :
                   'bg-slate-200 text-slate-600'
                 )}
@@ -99,11 +101,19 @@ export default function StudentEvents() {
                     <method.icon className="w-3 h-3 mr-1" />
                     {method.label}
                   </span>
-                  {event.status === 'ongoing' && (
-                    <button className="btn-primary text-sm px-3 py-1.5">
-                      Check In
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {event.status === 'upcoming' && (
+                      <button className="btn-secondary text-sm px-3 py-1.5">
+                        Register
+                      </button>
+                    )}
+                    {event.status === 'ongoing' && (
+                      <Link to="/student/checkin" className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1">
+                        <MapPinCheck className="w-3.5 h-3.5" />
+                        Check In
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

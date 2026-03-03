@@ -131,7 +131,7 @@ export default function UserManagement() {
                   setDeleteConfirm(row);
                   setActiveDropdown(null);
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete User

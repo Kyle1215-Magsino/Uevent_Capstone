@@ -65,7 +65,7 @@ export default function OrganizerReports() {
       render: (val) => (
         <span className={cn(
           'badge',
-          val >= 80 ? 'bg-emerald-100 text-emerald-800' : val >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+          val >= 80 ? 'bg-emerald-100 text-emerald-800' : val >= 60 ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-100 text-emerald-800'
         )}>
           {val}%
         </span>
@@ -119,7 +119,7 @@ export default function OrganizerReports() {
           title="Avg. Rate"
           value={`${(mockReports.reduce((sum, r) => sum + r.rate, 0) / mockReports.length).toFixed(1)}%`}
           icon={BarChart3}
-          iconColor="amber"
+          iconColor="emerald"
         />
       </div>
 
@@ -133,7 +133,7 @@ export default function OrganizerReports() {
             <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="Expected" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={22} />
-            <Bar dataKey="Present" fill="#3366FF" radius={[4, 4, 0, 0]} barSize={22} />
+            <Bar dataKey="Present" fill="#10b981" radius={[4, 4, 0, 0]} barSize={22} />
           </BarChart>
         </ResponsiveContainer>
       </div>

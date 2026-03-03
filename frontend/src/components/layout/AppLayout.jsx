@@ -15,11 +15,13 @@ import {
   ChevronDown,
   ScanFace,
   ClipboardCheck,
-  CalendarCheck,
   History,
   UserCircle,
   Shield,
   Bell,
+  CreditCard,
+  MapPinCheck,
+  Radio,
 } from 'lucide-react';
 
 const adminNav = [
@@ -29,11 +31,13 @@ const adminNav = [
   { name: 'Attendance Reports', href: '/admin/reports', icon: FileText },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Enrollments', href: '/admin/enrollments', icon: ScanFace },
+  { name: 'RFID Management', href: '/admin/rfid', icon: CreditCard },
 ];
 
 const organizerNav = [
   { name: 'Dashboard', href: '/organizer', icon: LayoutDashboard },
   { name: 'My Events', href: '/organizer/events', icon: Calendar },
+  { name: 'Check-In Station', href: '/organizer/checkin', icon: Radio },
   { name: 'Attendance', href: '/organizer/attendance', icon: ClipboardCheck },
   { name: 'Reports', href: '/organizer/reports', icon: FileText },
 ];
@@ -41,6 +45,7 @@ const organizerNav = [
 const studentNav = [
   { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
   { name: 'Events', href: '/student/events', icon: Calendar },
+  { name: 'Event Check-In', href: '/student/checkin', icon: MapPinCheck },
   { name: 'Facial Enrollment', href: '/student/enrollment', icon: ScanFace },
   { name: 'My Attendance', href: '/student/attendance', icon: History },
 ];
@@ -65,8 +70,8 @@ function getRoleLabel(role) {
 
 function getRoleColor(role) {
   switch (role) {
-    case 'admin': return 'bg-accent-100 text-accent-700';
-    case 'organizer': return 'bg-primary-100 text-primary-700';
+    case 'admin': return 'bg-emerald-100 text-emerald-700';
+    case 'organizer': return 'bg-emerald-100 text-emerald-700';
     case 'student': return 'bg-emerald-100 text-emerald-700';
     default: return 'bg-slate-100 text-slate-700';
   }
@@ -110,21 +115,19 @@ export default function AppLayout({ children }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-[260px] bg-white border-r border-slate-200/80 transform transition-transform duration-300 ease-out lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-[260px] bg-emerald-800 transform transition-transform duration-300 ease-out lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100">
-          <div className="w-9 h-9 bg-gradient-to-br from-primary-600 to-accent-600 rounded-xl flex items-center justify-center shadow-primary">
-            <CalendarCheck className="w-5 h-5 text-white" />
-          </div>
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-emerald-700/60">
+          <img src="/usg.png" alt="U-EventTrack" className="w-9 h-9 object-contain" />
           <div>
-            <h1 className="text-lg font-bold text-slate-900 tracking-tight">U-EventTrack</h1>
+            <h1 className="text-lg font-bold text-white tracking-tight">U-EventTrack</h1>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden text-slate-400 hover:text-slate-600"
+            className="ml-auto lg:hidden text-emerald-300 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
@@ -132,7 +135,7 @@ export default function AppLayout({ children }) {
 
         {/* Role Badge */}
         <div className="px-5 py-3">
-          <span className={cn('badge text-xs font-semibold', getRoleColor(user?.role))}>
+          <span className="badge text-xs font-semibold bg-emerald-700/60 text-emerald-100">
             <Shield className="w-3 h-3 mr-1.5" />
             {getRoleLabel(user?.role)}
           </span>
@@ -152,11 +155,11 @@ export default function AppLayout({ children }) {
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                   isActive
-                    ? 'bg-primary-50 text-primary-700 shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-white/15 text-white shadow-sm'
+                    : 'text-emerald-200 hover:bg-white/10 hover:text-white'
                 )}
               >
-                <item.icon className={cn('w-[18px] h-[18px]', isActive ? 'text-primary-600' : 'text-slate-400')} />
+                <item.icon className={cn('w-[18px] h-[18px]', isActive ? 'text-white' : 'text-emerald-400')} />
                 {item.name}
               </Link>
             );
@@ -164,14 +167,14 @@ export default function AppLayout({ children }) {
         </nav>
 
         {/* Bottom user info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-emerald-700/60">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center text-xs font-bold">
               {getInitials(user?.name || 'U')}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+              <p className="text-xs text-emerald-300 truncate">{user?.email}</p>
             </div>
           </div>
         </div>
@@ -203,7 +206,7 @@ export default function AppLayout({ children }) {
               {/* Notifications */}
               <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />
               </button>
 
               {/* Profile Dropdown */}
@@ -212,7 +215,7 @@ export default function AppLayout({ children }) {
                   onClick={() => setProfileOpen(!profileOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 text-white flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">
                     {getInitials(user?.name || 'U')}
                   </div>
                   <ChevronDown className={cn('w-4 h-4 text-slate-400 transition-transform duration-200', profileOpen && 'rotate-180')} />
@@ -245,7 +248,7 @@ export default function AppLayout({ children }) {
                     <div className="border-t border-slate-100 py-1">
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out

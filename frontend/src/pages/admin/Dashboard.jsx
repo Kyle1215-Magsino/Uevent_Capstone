@@ -13,6 +13,8 @@ import {
   CalendarDays,
   Hourglass,
   FileBarChart,
+  CreditCard,
+  MapPin,
 } from 'lucide-react';
 import { cn, formatDateTime } from '../../lib/utils';
 
@@ -24,6 +26,8 @@ const mockStats = {
   enrolledFaces: 1832,
   activeEvents: 5,
   pendingEnrollments: 12,
+  rfidAssigned: 2103,
+  locationVerified: 41580,
 };
 
 const mockRecentEvents = [
@@ -45,7 +49,7 @@ export default function AdminDashboard() {
   const { user } = useAuth();
 
   const statusColors = {
-    upcoming: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/50',
+    upcoming: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
     ongoing: 'bg-primary-50 text-primary-700 ring-1 ring-primary-200/50',
     completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
   };
@@ -58,14 +62,14 @@ export default function AdminDashboard() {
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatsCard
           title="Total Students"
           value={mockStats.totalUsers.toLocaleString()}
           change="12%"
           changeType="increase"
           icon={Users}
-          iconColor="blue"
+          iconColor="emerald"
         />
         <StatsCard
           title="Total Events"
@@ -73,7 +77,7 @@ export default function AdminDashboard() {
           change="8%"
           changeType="increase"
           icon={Calendar}
-          iconColor="violet"
+          iconColor="emerald"
         />
         <StatsCard
           title="Attendance Logs"
@@ -89,7 +93,23 @@ export default function AdminDashboard() {
           change="5%"
           changeType="increase"
           icon={ScanFace}
-          iconColor="amber"
+          iconColor="emerald"
+        />
+        <StatsCard
+          title="RFID Tags Assigned"
+          value={mockStats.rfidAssigned.toLocaleString()}
+          change="18%"
+          changeType="increase"
+          icon={CreditCard}
+          iconColor="emerald"
+        />
+        <StatsCard
+          title="Location Verified"
+          value={mockStats.locationVerified.toLocaleString()}
+          change="32%"
+          changeType="increase"
+          icon={MapPin}
+          iconColor="emerald"
         />
       </div>
 
@@ -97,8 +117,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Active Events', value: mockStats.activeEvents, href: '/admin/events', icon: CalendarDays, color: 'text-primary-600 bg-primary-50' },
-          { label: 'Pending Enrollments', value: mockStats.pendingEnrollments, href: '/admin/enrollments', icon: Hourglass, color: 'text-amber-600 bg-amber-50' },
-          { label: 'Manage Users', value: 'View All', href: '/admin/users', icon: Users, color: 'text-blue-600 bg-blue-50' },
+          { label: 'Pending Enrollments', value: mockStats.pendingEnrollments, href: '/admin/enrollments', icon: Hourglass, color: 'text-emerald-600 bg-emerald-50' },
+          { label: 'RFID Management', value: mockStats.rfidAssigned.toLocaleString(), href: '/admin/rfid', icon: CreditCard, color: 'text-emerald-600 bg-emerald-50' },
           { label: 'Generate Report', value: 'Reports', href: '/admin/reports', icon: FileBarChart, color: 'text-emerald-600 bg-emerald-50' },
         ].map((action) => (
           <Link key={action.label} to={action.href} className="card-hover p-5 group">

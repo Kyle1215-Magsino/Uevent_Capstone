@@ -12,6 +12,8 @@ import {
   ArrowRight,
   CheckCircle,
   AlertCircle,
+  CreditCard,
+  Navigation,
 } from 'lucide-react';
 
 const mockStats = {
@@ -39,8 +41,8 @@ export default function StudentDashboard() {
 
   const enrollmentBanner = {
     enrolled: { bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle, iconColor: 'text-emerald-600', text: 'Your facial data is enrolled and active.', textColor: 'text-emerald-800' },
-    pending: { bg: 'bg-amber-50 border-amber-200', icon: Clock, iconColor: 'text-amber-600', text: 'Your facial enrollment is pending approval.', textColor: 'text-amber-800' },
-    not_enrolled: { bg: 'bg-rose-50 border-rose-200', icon: AlertCircle, iconColor: 'text-rose-600', text: 'You haven\'t enrolled your facial data yet.', textColor: 'text-rose-800' },
+    pending: { bg: 'bg-emerald-50 border-emerald-200', icon: Clock, iconColor: 'text-emerald-600', text: 'Your facial enrollment is pending approval.', textColor: 'text-emerald-800' },
+    not_enrolled: { bg: 'bg-emerald-50 border-emerald-200', icon: AlertCircle, iconColor: 'text-emerald-600', text: 'You haven\'t enrolled your facial data yet.', textColor: 'text-emerald-800' },
   };
 
   const banner = enrollmentBanner[mockStats.enrollmentStatus];
@@ -69,16 +71,18 @@ export default function StudentDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatsCard title="Events Attended" value={mockStats.eventsAttended} icon={ClipboardCheck} iconColor="emerald" />
-        <StatsCard title="Total Events" value={mockStats.totalEvents} icon={Calendar} iconColor="blue" />
-        <StatsCard title="Attendance Rate" value={`${mockStats.attendanceRate}%`} icon={History} iconColor="amber" />
+        <StatsCard title="Total Events" value={mockStats.totalEvents} icon={Calendar} iconColor="emerald" />
+        <StatsCard title="Attendance Rate" value={`${mockStats.attendanceRate}%`} icon={History} iconColor="emerald" />
         <StatsCard
           title="Face Enrollment"
           value={mockStats.enrollmentStatus === 'enrolled' ? 'Active' : mockStats.enrollmentStatus === 'pending' ? 'Pending' : 'None'}
           icon={ScanFace}
-          iconColor="purple"
+          iconColor="emerald"
         />
+        <StatsCard title="RFID Tag" value={mockStats.rfidStatus === 'active' ? mockStats.rfidTag : 'Not Assigned'} icon={CreditCard} iconColor="emerald" />
+        <StatsCard title="Campus Location" value="Geofence Active" icon={Navigation} iconColor="emerald" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

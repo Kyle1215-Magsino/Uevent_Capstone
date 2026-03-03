@@ -2,15 +2,9 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 
 const ICON_COLORS = {
-  blue: { bg: 'bg-blue-100', text: 'text-blue-600' },
-  primary: { bg: 'bg-primary-100', text: 'text-primary-600' },
-  violet: { bg: 'bg-violet-100', text: 'text-violet-600' },
   emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
-  amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
-  rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
-  purple: { bg: 'bg-purple-100', text: 'text-purple-600' },
-  teal: { bg: 'bg-teal-100', text: 'text-teal-600' },
-  slate: { bg: 'bg-slate-100', text: 'text-slate-600' },
+  primary: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+  default: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
 };
 
 export function StatsCard({ title, value, change, changeType, icon: Icon, iconColor = 'primary' }) {
@@ -22,8 +16,8 @@ export function StatsCard({ title, value, change, changeType, icon: Icon, iconCo
           <p className="text-sm font-medium text-slate-500">{title}</p>
           <p className="text-3xl font-bold text-slate-900 tracking-tight">{value}</p>
           {change && (
-            <p className={cn('text-sm font-medium flex items-center gap-1', changeType === 'increase' ? 'text-emerald-600' : 'text-rose-600')}>
-              <span className={cn('inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px]', changeType === 'increase' ? 'bg-emerald-100' : 'bg-rose-100')}>
+            <p className={cn('text-sm font-medium flex items-center gap-1', changeType === 'increase' ? 'text-emerald-600' : 'text-emerald-500')}>
+              <span className={cn('inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px]', changeType === 'increase' ? 'bg-emerald-100' : 'bg-emerald-100')}>
                 {changeType === 'increase' ? '↑' : '↓'}
               </span>
               {change}
@@ -216,7 +210,7 @@ export function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 animate-fade-in">
       {Icon && (
-        <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-accent-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
+        <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
           <Icon className="w-8 h-8 text-primary-500" />
         </div>
       )}
@@ -288,11 +282,11 @@ export function StatusBadge({ status }) {
     active: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
     present: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
     completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
-    upcoming: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/50',
-    pending: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/50',
-    cancelled: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/50',
-    absent: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/50',
-    ongoing: 'bg-primary-50 text-primary-700 ring-1 ring-primary-200/50',
+    upcoming: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
+    pending: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
+    cancelled: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
+    absent: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
+    ongoing: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
     draft: 'bg-slate-50 text-slate-700 ring-1 ring-slate-200/50',
   };
 
@@ -309,7 +303,7 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, confir
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 animate-scale-in">
+      <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200/80 max-w-md w-full p-6 animate-scale-in">
         <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
         <p className="text-sm text-slate-500 mt-2 leading-relaxed">{message}</p>
         <div className="flex items-center justify-end gap-3 mt-6">
@@ -340,7 +334,7 @@ export function Modal({ open, onClose, title, size = 'md', children }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
       <div className={cn(
-        'relative bg-white rounded-2xl shadow-xl w-full max-h-[90vh] flex flex-col animate-scale-in',
+        'relative bg-white rounded-2xl shadow-xl border border-slate-200/80 w-full max-h-[90vh] flex flex-col animate-scale-in',
         sizeClasses[size]
       )}>
         {title && (

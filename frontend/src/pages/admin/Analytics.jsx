@@ -31,7 +31,7 @@ const methodDistribution = [
   { method: 'Manual', count: 24, percentage: 15 },
 ];
 
-const PIE_COLORS = ['#8B42FF', '#3366FF', '#94a3b8'];
+const PIE_COLORS = ['#10b981', '#059669', '#6ee7b7'];
 
 const peakHoursData = [
   { time: '7-9 AM', count: 4200 },
@@ -80,15 +80,15 @@ export default function Analytics() {
             <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3366FF" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3366FF" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="attendance" name="Attendance" stroke="#3366FF" strokeWidth={2.5} fill="url(#colorAttendance)" />
+              <Area type="monotone" dataKey="attendance" name="Attendance" stroke="#10b981" strokeWidth={2.5} fill="url(#colorAttendance)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -143,7 +143,7 @@ export default function Analytics() {
               <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
               <YAxis dataKey="name" type="category" width={160} tick={{ fontSize: 12, fill: '#334155' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="attendance" name="Attendance" fill="#3366FF" radius={[0, 6, 6, 0]} barSize={22} />
+              <Bar dataKey="attendance" name="Attendance" fill="#10b981" radius={[0, 6, 6, 0]} barSize={22} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -156,7 +156,7 @@ export default function Analytics() {
               <defs>
                 <linearGradient id="colorPeak" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#059669" />
+                  <stop offset="100%" stopColor="#10b981" />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

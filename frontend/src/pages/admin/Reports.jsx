@@ -75,8 +75,8 @@ export default function Reports() {
             val >= 80
               ? 'bg-emerald-100 text-emerald-800'
               : val >= 60
-              ? 'bg-amber-100 text-amber-800'
-              : 'bg-rose-100 text-rose-800'
+              ? 'bg-emerald-100 text-emerald-800'
+              : 'bg-emerald-100 text-emerald-800'
           )}
         >
           {val}%
@@ -131,7 +131,7 @@ export default function Reports() {
           title="Avg. Attendance Rate"
           value={`${(mockReports.reduce((sum, r) => sum + r.rate, 0) / mockReports.length).toFixed(1)}%`}
           icon={BarChart3}
-          iconColor="amber"
+          iconColor="emerald"
         />
       </div>
 
@@ -145,7 +145,7 @@ export default function Reports() {
             <YAxis tick={{ fontSize: 12, fill: '#64748b' }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="Expected" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={20} />
-            <Bar dataKey="Present" fill="#3366FF" radius={[4, 4, 0, 0]} barSize={20} />
+            <Bar dataKey="Present" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
           </BarChart>
         </ResponsiveContainer>
       </div>

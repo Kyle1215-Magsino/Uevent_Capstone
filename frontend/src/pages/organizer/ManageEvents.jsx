@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageHeader, SearchInput, StatusBadge, ConfirmDialog, Modal } from '../../components/ui';
 import { cn, formatDateTime } from '../../lib/utils';
-import { CalendarPlus, Eye, Edit, Trash2, MapPin, Clock, Users, MoreVertical, ScanFace, CreditCard, ClipboardList, Info } from 'lucide-react';
+import { CalendarPlus, Eye, Edit, Trash2, MapPin, Clock, Users, MoreVertical, ScanFace, CreditCard, ClipboardList, Info, Navigation } from 'lucide-react';
 
 const mockEvents = [
   { id: 1, title: 'Leadership Training Seminar', description: '', date: '2026-03-05', start_time: '09:00', end_time: '12:00', venue: 'Main Auditorium', status: 'upcoming', attendance_method: 'face_recognition', attendees: 0, capacity: 200 },
@@ -15,11 +15,13 @@ const methodLabels = {
   face_recognition: 'Face Recognition',
   rfid: 'RFID',
   manual: 'Manual',
+  location: 'Location Tracking',
 };
 
 const attendanceMethods = [
-  { value: 'face_recognition', label: 'Face Recognition', description: 'Automated check-in using facial recognition camera.', icon: ScanFace, color: 'border-purple-500 bg-purple-50', iconColor: 'text-purple-600' },
-  { value: 'rfid', label: 'RFID Scanning', description: 'Students tap their RFID-enabled ID cards.', icon: CreditCard, color: 'border-blue-500 bg-blue-50', iconColor: 'text-blue-600' },
+  { value: 'face_recognition', label: 'Face Recognition', description: 'Automated check-in using facial recognition camera.', icon: ScanFace, color: 'border-emerald-500 bg-emerald-50', iconColor: 'text-emerald-600' },
+  { value: 'rfid', label: 'RFID Scanning', description: 'Students tap their RFID-enabled ID cards.', icon: CreditCard, color: 'border-emerald-500 bg-emerald-50', iconColor: 'text-emerald-600' },
+  { value: 'location', label: 'Location Tracking', description: 'Verify students are within campus geofence.', icon: Navigation, color: 'border-emerald-500 bg-emerald-50', iconColor: 'text-emerald-600' },
   { value: 'manual', label: 'Manual Verification', description: 'Organizers manually verify and log attendance.', icon: ClipboardList, color: 'border-slate-500 bg-slate-50', iconColor: 'text-slate-600' },
 ];
 
@@ -72,7 +74,7 @@ function EventFormFields({ form, onChange }) {
       {/* Attendance Method */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-2">Attendance Method</label>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {attendanceMethods.map((method) => (
             <button
               key={method.value}
@@ -90,9 +92,21 @@ function EventFormFields({ form, onChange }) {
           ))}
         </div>
         {form.attendance_method === 'face_recognition' && (
-          <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg p-3 flex items-start gap-2">
-            <Info className="w-4 h-4 text-purple-600 mt-0.5 shrink-0" />
-            <p className="text-xs text-purple-700">Students must complete facial enrollment before they can be verified via face recognition.</p>
+          <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
+            <Info className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-emerald-700">Students must complete facial enrollment before they can be verified via face recognition.</p>
+          </div>
+        )}
+        {form.attendance_method === 'rfid' && (
+          <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
+            <Info className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-emerald-700">Students must have an RFID tag assigned in the system. Tags are managed by the admin.</p>
+          </div>
+        )}
+        {form.attendance_method === 'location' && (
+          <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-start gap-2">
+            <Info className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-emerald-700">Students must be within the 500m campus geofence radius. Location is verified via GPS.</p>
           </div>
         )}
       </div>
@@ -229,7 +243,7 @@ export default function ManageEvents() {
                         </button>
                         <button
                           onClick={() => { setDeleteConfirm(event); setActiveDropdown(null); }}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50"
                         >
                           <Trash2 className="w-4 h-4" />Delete
                         </button>

@@ -66,8 +66,8 @@ export default function LiveDashboard() {
   );
 
   const methodIcon = {
-    face: <ScanFace className="w-4 h-4 text-purple-600" />,
-    rfid: <CreditCard className="w-4 h-4 text-blue-600" />,
+    face: <ScanFace className="w-4 h-4 text-emerald-600" />,
+    rfid: <CreditCard className="w-4 h-4 text-emerald-600" />,
     manual: <ClipboardList className="w-4 h-4 text-slate-600" />,
   };
 
@@ -120,13 +120,13 @@ export default function LiveDashboard() {
           title="Fill Rate"
           value={`${((attendees.length / mockEventInfo.capacity) * 100).toFixed(1)}%`}
           icon={Gauge}
-          iconColor="amber"
+          iconColor="emerald"
         />
         <StatsCard
           title="Remaining"
           value={Math.max(mockEventInfo.capacity - attendees.length, 0)}
           icon={UserMinus}
-          iconColor="purple"
+          iconColor="emerald"
         />
       </div>
 
@@ -140,7 +140,7 @@ export default function LiveDashboard() {
         </div>
         <div className="w-full bg-slate-100 rounded-full h-4">
           <div
-            className="bg-gradient-to-r from-primary-500 to-primary-600 h-4 rounded-full transition-all duration-500"
+            className="bg-primary-500 h-4 rounded-full transition-all duration-500"
             style={{ width: `${Math.min((attendees.length / mockEventInfo.capacity) * 100, 100)}%` }}
           />
         </div>

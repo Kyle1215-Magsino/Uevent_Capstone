@@ -46,8 +46,8 @@ export default function AttendanceMonitor() {
   ];
 
   const methodIcons = {
-    face: <ScanFace className="w-4 h-4 text-purple-600" />,
-    rfid: <CreditCard className="w-4 h-4 text-blue-600" />,
+    face: <ScanFace className="w-4 h-4 text-emerald-600" />,
+    rfid: <CreditCard className="w-4 h-4 text-emerald-600" />,
     manual: <ClipboardList className="w-4 h-4 text-slate-600" />,
   };
 

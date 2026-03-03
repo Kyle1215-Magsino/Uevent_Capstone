@@ -10,6 +10,7 @@ import {
   Clock,
   ArrowRight,
   TrendingUp,
+  Radio,
 } from 'lucide-react';
 
 const mockStats = {
@@ -29,7 +30,7 @@ export default function OrganizerDashboard() {
   const { user } = useAuth();
 
   const statusColors = {
-    upcoming: 'bg-blue-100 text-blue-800',
+    upcoming: 'bg-emerald-100 text-emerald-800',
     ongoing: 'bg-primary-100 text-primary-800',
     completed: 'bg-emerald-100 text-emerald-800',
   };
@@ -49,10 +50,10 @@ export default function OrganizerDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="My Events" value={mockStats.totalEvents} icon={Calendar} iconColor="blue" />
+        <StatsCard title="My Events" value={mockStats.totalEvents} icon={Calendar} iconColor="emerald" />
         <StatsCard title="Active Now" value={mockStats.activeEvents} icon={Clock} iconColor="primary" />
         <StatsCard title="Total Attendance" value={mockStats.totalAttendance.toLocaleString()} icon={ClipboardCheck} iconColor="emerald" />
-        <StatsCard title="Avg. Rate" value={`${mockStats.avgRate}%`} icon={TrendingUp} iconColor="amber" />
+        <StatsCard title="Avg. Rate" value={`${mockStats.avgRate}%`} icon={TrendingUp} iconColor="emerald" />
       </div>
 
       {/* My Events List */}
@@ -109,13 +110,13 @@ export default function OrganizerDashboard() {
           <h3 className="font-semibold text-slate-900">Create New Event</h3>
           <p className="text-sm text-slate-500 mt-1">Set up a new university event with attendance tracking.</p>
         </Link>
-        <Link to="/organizer/attendance" className="card-hover p-5 group">
-          <ClipboardCheck className="w-8 h-8 text-emerald-600 mb-3" />
-          <h3 className="font-semibold text-slate-900">Monitor Attendance</h3>
-          <p className="text-sm text-slate-500 mt-1">View real-time attendance data for your events.</p>
+        <Link to="/organizer/checkin" className="card-hover p-5 group">
+          <Radio className="w-8 h-8 text-emerald-600 mb-3" />
+          <h3 className="font-semibold text-slate-900">Check-In Station</h3>
+          <p className="text-sm text-slate-500 mt-1">Process student check-ins via RFID, face, or manual entry.</p>
         </Link>
         <Link to="/organizer/reports" className="card-hover p-5 group">
-          <TrendingUp className="w-8 h-8 text-amber-600 mb-3" />
+          <TrendingUp className="w-8 h-8 text-emerald-600 mb-3" />
           <h3 className="font-semibold text-slate-900">Generate Reports</h3>
           <p className="text-sm text-slate-500 mt-1">Export attendance reports for your events.</p>
         </Link>

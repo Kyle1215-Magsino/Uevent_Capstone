@@ -14,8 +14,8 @@ const mockEvents = [
 ];
 
 const methodLabels = {
-  face_recognition: { label: 'Face Recognition', color: 'bg-purple-100 text-purple-800' },
-  rfid: { label: 'RFID', color: 'bg-blue-100 text-blue-800' },
+  face_recognition: { label: 'Face Recognition', color: 'bg-emerald-100 text-emerald-800' },
+  rfid: { label: 'RFID', color: 'bg-emerald-100 text-emerald-800' },
   manual: { label: 'Manual', color: 'bg-slate-100 text-slate-800' },
 };
 

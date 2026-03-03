@@ -18,8 +18,8 @@ const mockAttendance = [
 ];
 
 const methodIcon = {
-  face: { icon: ScanFace, label: 'Face Recognition', color: 'text-purple-600' },
-  rfid: { icon: CreditCard, label: 'RFID', color: 'text-blue-600' },
+  face: { icon: ScanFace, label: 'Face Recognition', color: 'text-emerald-600' },
+  rfid: { icon: CreditCard, label: 'RFID', color: 'text-emerald-600' },
   manual: { icon: ClipboardList, label: 'Manual', color: 'text-slate-600' },
   '-': { icon: Clock, label: 'N/A', color: 'text-slate-400' },
 };
@@ -42,7 +42,7 @@ export default function AttendanceHistory() {
     { name: 'Present', value: presentCount },
     { name: 'Absent', value: absentCount },
   ];
-  const PIE_COLORS = ['#10b981', '#f43f5e'];
+  const PIE_COLORS = ['#10b981', '#059669'];
 
   const columns = [
     {
@@ -108,7 +108,7 @@ export default function AttendanceHistory() {
           title="Total Events"
           value={mockAttendance.length}
           icon={Calendar}
-          iconColor="blue"
+          iconColor="emerald"
         />
         <StatsCard
           title="Present"
@@ -120,13 +120,13 @@ export default function AttendanceHistory() {
           title="Absent"
           value={absentCount}
           icon={UserX}
-          iconColor="rose"
+          iconColor="emerald"
         />
         <StatsCard
           title="Attendance Rate"
           value={`${rate}%`}
           icon={TrendingUp}
-          iconColor="amber"
+          iconColor="emerald"
         />
       </div>
 
@@ -149,7 +149,7 @@ export default function AttendanceHistory() {
               <span className="text-sm text-slate-600">Present: <strong>{presentCount}</strong></span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-rose-500" />
+              <span className="w-3 h-3 rounded-full bg-emerald-500" />
               <span className="text-sm text-slate-600">Absent: <strong>{absentCount}</strong></span>
             </div>
           </div>
