@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { Modal } from '../ui';
 import { cn, getInitials } from '../../lib/utils';
 import {
   LayoutDashboard,
@@ -45,7 +47,7 @@ const organizerNav = [
 const studentNav = [
   { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
   { name: 'Events', href: '/student/events', icon: Calendar },
-  { name: 'Event Check-In', href: '/student/checkin', icon: MapPinCheck },
+  { name: 'Event Check-In', href: '/student/events', icon: MapPinCheck },
   { name: 'Facial Enrollment', href: '/student/enrollment', icon: ScanFace },
   { name: 'My Attendance', href: '/student/attendance', icon: History },
 ];
@@ -83,6 +85,7 @@ export default function AppLayout({ children }) {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const profileRef = useRef(null);
 
   const navItems = getNavItems(user?.role);
@@ -97,8 +100,15 @@ export default function AppLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setProfileOpen(false);
+    setLogoutModalOpen(true);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutModalOpen(false);
     await logout();
+    toast.success('You have been signed out.');
     navigate('/');
   };
 
@@ -264,6 +274,33 @@ export default function AppLayout({ children }) {
         {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <Modal open={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} title="Sign Out" size="sm">
+        <div className="text-center space-y-4">
+          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <LogOut className="w-7 h-7 text-red-600" />
+          </div>
+          <div>
+            <h4 className="text-lg font-semibold text-slate-900">Are you sure you want to sign out?</h4>
+            <p className="text-sm text-slate-500 mt-1">You will need to log in again to access your account.</p>
+          </div>
+          <div className="flex gap-3 justify-center pt-2">
+            <button
+              onClick={() => setLogoutModalOpen(false)}
+              className="btn-secondary px-6"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmLogout}
+              className="px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

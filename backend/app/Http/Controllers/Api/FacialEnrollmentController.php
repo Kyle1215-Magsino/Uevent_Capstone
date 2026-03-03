@@ -127,4 +127,17 @@ class FacialEnrollmentController extends Controller
 
         return response()->json($enrollment->load('user:id,name,email,student_id'));
     }
+
+    /**
+     * Get all approved enrollments with face data (for face matching at check-in).
+     */
+    public function enrolledFaces(): JsonResponse
+    {
+        $enrollments = FacialEnrollment::with('user:id,name,email,student_id')
+            ->where('status', 'approved')
+            ->whereNotNull('face_data')
+            ->get(['id', 'user_id', 'face_data']);
+
+        return response()->json($enrollments);
+    }
 }

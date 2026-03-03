@@ -1,8 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import * as faceapi from 'face-api.js';
+import toast from 'react-hot-toast';
 import { PageHeader, Modal } from '../../components/ui';
 import { cn, formatDateTime } from '../../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
+import { eventsAPI, attendanceAPI, enrollmentAPI } from '../../api/endpoints';
 import {
   ScanFace, CreditCard, MapPin, CheckCircle2, Clock,
   Loader2, AlertTriangle, Navigation, ChevronRight,
@@ -14,17 +17,6 @@ const MODEL_URL = '/models';
 const CAMPUS_CENTER = { lat: 12.7478, lng: 121.4732 };
 const GEOFENCE_RADIUS_METERS = 500;
 
-const mockEvent = {
-  id: 2,
-  title: 'Cultural Night 2026',
-  date: '2026-03-03T18:00:00',
-  venue: 'University Gymnasium',
-  method: 'face_recognition',
-  status: 'ongoing',
-  capacity: 500,
-  organizer: 'Cultural Committee',
-};
-
 function haversineDistance(lat1, lng1, lat2, lng2) {
   const R = 6371e3;
   const toRad = (d) => (d * Math.PI) / 180;
@@ -35,8 +27,13 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
 }
 
 export default function EventCheckIn() {
+  const { eventId } = useParams();
+  const { user } = useAuth();
   const [step, setStep] = useState('info'); // info | verify | result
   const [selectedMethod, setSelectedMethod] = useState(null);
+  const [event, setEvent] = useState(null);
+  const [eventLoading, setEventLoading] = useState(true);
+  const [eventError, setEventError] = useState(null);
 
   /* Location */
   const [locationStatus, setLocationStatus] = useState('checking');
@@ -46,7 +43,6 @@ export default function EventCheckIn() {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [faceStatus, setFaceStatus] = useState('idle'); // idle | detecting | success | fail
-  const [faceScore, setFaceScore] = useState(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -58,6 +54,28 @@ export default function EventCheckIn() {
 
   /* Result */
   const [checkInResult, setCheckInResult] = useState(null);
+
+  /* Enrolled face descriptors */
+  const [enrolledDescriptors, setEnrolledDescriptors] = useState(null);
+  const [enrollmentLoading, setEnrollmentLoading] = useState(true);
+
+  /* ── Fetch enrolled face data ────────────────────────────── */
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await enrollmentAPI.getStatus();
+        if (res.data?.status === 'approved' && res.data?.face_data) {
+          const parsed = JSON.parse(res.data.face_data);
+          const descriptors = parsed.map((d) => new Float32Array(d));
+          setEnrolledDescriptors(descriptors);
+        }
+      } catch {
+        // No enrollment or error — face check-in won't be available
+      } finally {
+        setEnrollmentLoading(false);
+      }
+    })();
+  }, []);
 
   /* ── Geolocation ─────────────────────────────────────────── */
   useEffect(() => {
@@ -75,6 +93,32 @@ export default function EventCheckIn() {
       { enableHighAccuracy: true, timeout: 15000 }
     );
   }, []);
+
+  /* ── Load event from API ─────────────────────────────────── */
+  useEffect(() => {
+    if (!eventId) {
+      setEventError('No event specified.');
+      setEventLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await eventsAPI.getById(eventId);
+        if (!cancelled) {
+          setEvent(res.data);
+          setEventLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setEventError(err.response?.data?.message || 'Failed to load event.');
+          setEventLoading(false);
+          toast.error('Failed to load event details.');
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [eventId]);
 
   /* ── Face-api ────────────────────────────────────────────── */
   const loadModels = useCallback(async () => {
@@ -119,6 +163,14 @@ export default function EventCheckIn() {
     setCameraActive(false);
   }, []);
 
+  /* Attach stream to video element once it renders (fixes race condition) */
+  useEffect(() => {
+    if (cameraActive && streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraActive, step]);
+
   useEffect(() => {
     return () => stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,6 +204,21 @@ export default function EventCheckIn() {
 
   const runFaceVerification = useCallback(async () => {
     if (!cameraActive || !modelsLoaded) return;
+
+    // Check that enrolled face data is available
+    if (!enrolledDescriptors || enrolledDescriptors.length === 0) {
+      toast.error('No enrolled face data found. Please complete facial enrollment first.');
+      setFaceStatus('fail');
+      return;
+    }
+
+    // Build a FaceMatcher from the student's enrolled descriptors
+    const labeledDescriptors = new faceapi.LabeledFaceDescriptors(
+      String(user?.id || 'me'),
+      enrolledDescriptors,
+    );
+    const faceMatcher = new faceapi.FaceMatcher([labeledDescriptors], 0.6);
+
     setFaceStatus('detecting');
     let attempts = 0;
     let matched = false;
@@ -167,49 +234,79 @@ export default function EventCheckIn() {
 
       if (detection) {
         drawOverlay(detection);
-        const score = Math.round(detection.detection.score * 100);
-        if (score >= 65) {
+
+        // Compare live face against enrolled descriptors
+        const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+
+        if (bestMatch.label !== 'unknown') {
+          const confidence = Math.round((1 - bestMatch.distance) * 100);
           matched = true;
           clearInterval(detectRef.current);
-          setFaceScore(score);
           setFaceStatus('success');
           stopCamera();
-          completeCheckIn('face', score);
+
+          // Call real API to record attendance
+          try {
+            const res = await attendanceAPI.faceCheckIn(event?.id || eventId, { user_id: user?.id });
+            const attendanceStatus = res.data?.status || 'present';
+            toast.success(`Face verified! (${confidence}% match) You are marked as ${attendanceStatus === 'late' ? 'LATE' : 'PRESENT'}.`);
+            completeCheckIn('face', confidence, attendanceStatus);
+          } catch (err) {
+            const msg = err.response?.data?.message || 'Failed to record attendance.';
+            if (err.response?.status === 409) {
+              const existingStatus = err.response?.data?.attendance?.status || 'present';
+              toast('You have already checked in to this event.', { icon: 'ℹ️' });
+              completeCheckIn('face', confidence, existingStatus);
+            } else {
+              toast.error(msg);
+              setFaceStatus('fail');
+            }
+          }
         }
       } else {
         drawOverlay(null);
       }
 
-      if (attempts >= 20 && !matched) {
+      if (attempts >= 30 && !matched) {
         clearInterval(detectRef.current);
         setFaceStatus('fail');
+        toast.error('Face does not match your enrollment. Please try again or use RFID.');
       }
     }, 500);
-  }, [cameraActive, modelsLoaded, drawOverlay, stopCamera]);
+  }, [cameraActive, modelsLoaded, enrolledDescriptors, drawOverlay, stopCamera, event, eventId, user]);
 
   /* ── RFID ────────────────────────────────────────────────── */
-  const handleRFIDSubmit = (e) => {
+  const handleRFIDSubmit = async (e) => {
     e.preventDefault();
     if (!rfidInput.trim()) return;
     setRfidStatus('processing');
-    setTimeout(() => {
-      // Simulate RFID lookup
-      const valid = rfidInput.trim().length >= 4;
-      if (valid) {
-        setRfidStatus('success');
-        completeCheckIn('rfid', 100);
+
+    try {
+      const res = await attendanceAPI.rfidCheckIn(event?.id || eventId, { student_id: rfidInput.trim() });
+      const attendanceStatus = res.data?.status || 'present';
+      setRfidStatus('success');
+      toast.success(`RFID verified! You are marked as ${attendanceStatus === 'late' ? 'LATE' : 'PRESENT'}.`);
+      completeCheckIn('rfid', 100, attendanceStatus);
+    } catch (err) {
+      const msg = err.response?.data?.message || 'RFID not recognized.';
+      if (err.response?.status === 409) {
+        const existingStatus = err.response?.data?.attendance?.status || 'present';
+        toast('You have already checked in to this event.', { icon: 'ℹ️' });
+        completeCheckIn('rfid', 100, existingStatus);
       } else {
         setRfidStatus('fail');
+        toast.error(msg);
       }
-    }, 1000);
+    }
   };
 
   /* ── Complete ────────────────────────────────────────────── */
-  const completeCheckIn = (method, score) => {
+  const completeCheckIn = (method, score, attendanceStatus = 'present') => {
     setCheckInResult({
-      event: mockEvent.title,
+      event: event?.title || 'Event',
       method,
       score,
+      status: attendanceStatus,
       location: locationStatus,
       distance: locationDistance,
       time: new Date().toISOString(),
@@ -233,20 +330,38 @@ export default function EventCheckIn() {
         description="Verify your identity and check in to the event."
       />
 
+      {/* Loading / Error states */}
+      {eventLoading && (
+        <div className="max-w-2xl mx-auto card p-12 text-center">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading event details...</p>
+        </div>
+      )}
+
+      {eventError && !eventLoading && (
+        <div className="max-w-2xl mx-auto card p-12 text-center">
+          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+          <p className="text-sm text-red-600 font-medium">{eventError}</p>
+          <Link to="/student/events" className="btn-secondary mt-4 inline-flex">Back to Events</Link>
+        </div>
+      )}
+
+      {!eventLoading && !eventError && event && (
+        <>
       {/* ── Step: Event Info ── */}
       {step === 'info' && (
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Event Card */}
           <div className="card p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="badge bg-emerald-100 text-emerald-800 capitalize">{mockEvent.status}</span>
-              <span className="text-xs text-slate-500">{mockEvent.organizer}</span>
+              <span className="badge bg-emerald-100 text-emerald-800 capitalize">{event.status}</span>
+              <span className="text-xs text-slate-500">{event.organizer?.name || event.organizer || ''}</span>
             </div>
-            <h2 className="text-xl font-bold text-slate-900">{mockEvent.title}</h2>
+            <h2 className="text-xl font-bold text-slate-900">{event.title}</h2>
             <div className="grid sm:grid-cols-3 gap-3 text-sm text-slate-500">
-              <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-slate-400" />{formatDateTime(mockEvent.date)}</span>
-              <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-400" />{mockEvent.venue}</span>
-              <span className="flex items-center gap-2"><Users className="w-4 h-4 text-slate-400" />Capacity: {mockEvent.capacity}</span>
+              <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-slate-400" />{formatDateTime(event.date)}</span>
+              <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-400" />{event.venue}</span>
+              <span className="flex items-center gap-2"><Users className="w-4 h-4 text-slate-400" />Capacity: {event.capacity}</span>
             </div>
           </div>
 
@@ -285,16 +400,21 @@ export default function EventCheckIn() {
             <div className="grid sm:grid-cols-2 gap-4">
               <button
                 onClick={() => startVerification('face')}
-                className="card-hover p-5 text-left group"
+                disabled={enrollmentLoading || !enrolledDescriptors}
+                className={cn('card-hover p-5 text-left group', (!enrolledDescriptors && !enrollmentLoading) && 'opacity-60')}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <ScanFace className="w-6 h-6 text-emerald-600" />
+                    {enrollmentLoading ? <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" /> : <ScanFace className="w-6 h-6 text-emerald-600" />}
                   </div>
                   <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" />
                 </div>
                 <h4 className="text-sm font-semibold text-slate-900">Face Recognition</h4>
-                <p className="text-xs text-slate-500 mt-1">Verify using your enrolled facial data</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {enrollmentLoading ? 'Loading enrollment data...' :
+                   !enrolledDescriptors ? 'No approved enrollment found' :
+                   'Verify using your enrolled facial data'}
+                </p>
               </button>
               <button
                 onClick={() => startVerification('rfid')}
@@ -409,6 +529,14 @@ export default function EventCheckIn() {
             <div>
               <h2 className="text-2xl font-bold text-slate-900">Check-In Successful!</h2>
               <p className="text-sm text-slate-500 mt-1">{checkInResult.event}</p>
+              <span className={cn(
+                'inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide',
+                checkInResult.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
+                checkInResult.status === 'late' ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+              )}>
+                {checkInResult.status === 'present' ? '✓ Present' : checkInResult.status === 'late' ? '⏰ Late' : '✗ Absent'}
+              </span>
             </div>
 
             <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-3 text-sm">
@@ -425,6 +553,16 @@ export default function EventCheckIn() {
                   <span className="font-medium text-emerald-600">{checkInResult.score}%</span>
                 </div>
               )}
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Status</span>
+                <span className={cn(
+                  'font-medium capitalize',
+                  checkInResult.status === 'present' ? 'text-emerald-600' :
+                  checkInResult.status === 'late' ? 'text-amber-600' : 'text-red-600'
+                )}>
+                  {checkInResult.status}
+                </span>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Location</span>
                 <span className={cn('font-medium flex items-center gap-1', checkInResult.location === 'inside' ? 'text-emerald-600' : 'text-slate-600')}>
@@ -452,6 +590,8 @@ export default function EventCheckIn() {
             Back to Events
           </Link>
         </div>
+      )}
+        </>
       )}
     </div>
   );

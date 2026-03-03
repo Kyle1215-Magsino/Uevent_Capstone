@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute, RoleRoute, GuestRoute } from './routes/Guards';
 import AppLayout from './components/layout/AppLayout';
@@ -56,6 +57,7 @@ function AppRoutes() {
       <Route path="/admin/analytics" element={<RoleRoute roles={['admin']}><AppLayout><Analytics /></AppLayout></RoleRoute>} />
       <Route path="/admin/enrollments" element={<RoleRoute roles={['admin']}><AppLayout><Enrollments /></AppLayout></RoleRoute>} />
       <Route path="/admin/rfid" element={<RoleRoute roles={['admin']}><AppLayout><RFIDManagement /></AppLayout></RoleRoute>} />
+      <Route path="/admin/events/:id/live" element={<RoleRoute roles={['admin']}><AppLayout><LiveDashboard /></AppLayout></RoleRoute>} />
       <Route path="/admin/profile" element={<RoleRoute roles={['admin']}><AppLayout><Profile /></AppLayout></RoleRoute>} />
       <Route path="/admin/settings" element={<RoleRoute roles={['admin']}><AppLayout><Settings /></AppLayout></RoleRoute>} />
 
@@ -73,7 +75,7 @@ function AppRoutes() {
       {/* ── Student Routes ── */}
       <Route path="/student" element={<RoleRoute roles={['student']}><AppLayout><StudentDashboard /></AppLayout></RoleRoute>} />
       <Route path="/student/events" element={<RoleRoute roles={['student']}><AppLayout><StudentEvents /></AppLayout></RoleRoute>} />
-      <Route path="/student/checkin" element={<RoleRoute roles={['student']}><AppLayout><EventCheckIn /></AppLayout></RoleRoute>} />
+      <Route path="/student/checkin/:eventId" element={<RoleRoute roles={['student']}><AppLayout><EventCheckIn /></AppLayout></RoleRoute>} />
       <Route path="/student/enrollment" element={<RoleRoute roles={['student']}><AppLayout><FacialEnrollment /></AppLayout></RoleRoute>} />
       <Route path="/student/attendance" element={<RoleRoute roles={['student']}><AppLayout><AttendanceHistory /></AppLayout></RoleRoute>} />
       <Route path="/student/profile" element={<RoleRoute roles={['student']}><AppLayout><Profile /></AppLayout></RoleRoute>} />
@@ -90,6 +92,15 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: { borderRadius: '12px', padding: '12px 16px', fontSize: '14px' },
+            success: { iconTheme: { primary: '#10b981', secondary: '#fff' } },
+            error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          }}
+        />
       </AuthProvider>
     </BrowserRouter>
   );

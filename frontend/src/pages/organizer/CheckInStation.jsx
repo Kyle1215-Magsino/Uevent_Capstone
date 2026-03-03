@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
+import toast from 'react-hot-toast';
 import { PageHeader, SearchInput, StatsCard, Modal } from '../../components/ui';
 import { cn, getInitials } from '../../lib/utils';
+import { eventsAPI, attendanceAPI, enrollmentAPI } from '../../api/endpoints';
 import {
   ScanFace, CreditCard, ClipboardList, MapPin, CheckCircle2,
   Video, VideoOff, Loader2, AlertTriangle, Radio, Users,
@@ -15,20 +17,6 @@ const MODEL_URL = '/models';
 const CAMPUS_CENTER = { lat: 12.7478, lng: 121.4732 };
 const GEOFENCE_RADIUS_METERS = 500;
 
-const mockEvents = [
-  { id: 1, title: 'Leadership Training Seminar', venue: 'Main Auditorium', status: 'upcoming', capacity: 200, method: 'face_recognition' },
-  { id: 2, title: 'Cultural Night 2026', venue: 'University Gymnasium', status: 'ongoing', capacity: 500, method: 'face_recognition' },
-  { id: 3, title: 'Academic Excellence Awards', venue: 'Convention Hall', status: 'ongoing', capacity: 200, method: 'rfid' },
-];
-
-const mockStudentDB = [
-  { student_id: '2024-00001', name: 'Juan Dela Cruz', rfid_tag: 'RFID-001-2024', enrolled_face: true },
-  { student_id: '2024-00002', name: 'Maria Santos', rfid_tag: 'RFID-002-2024', enrolled_face: true },
-  { student_id: '2024-00003', name: 'Pedro Gomez', rfid_tag: 'RFID-003-2024', enrolled_face: false },
-  { student_id: '2024-00004', name: 'Ana Rivera', rfid_tag: 'RFID-004-2024', enrolled_face: true },
-  { student_id: '2024-00005', name: 'Carlos Mendoza', rfid_tag: 'RFID-005-2024', enrolled_face: true },
-];
-
 /* ── Helpers ───────────────────────────────────────────────── */
 function haversineDistance(lat1, lng1, lat2, lng2) {
   const R = 6371e3;
@@ -39,7 +27,23 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/* Determine attendance status based on event start time (15-min grace period) */
+function determineAttendanceStatus(event) {
+  if (!event) return 'present';
+  const now = new Date();
+  // Parse event date + start_time
+  const eventDate = new Date(event.date || event.start_date);
+  if (event.start_time) {
+    const [h, m] = event.start_time.split(':').map(Number);
+    eventDate.setHours(h, m, 0, 0);
+  }
+  const lateThreshold = new Date(eventDate.getTime() + 15 * 60000);
+  return now > lateThreshold ? 'late' : 'present';
+}
+
 export default function CheckInStation() {
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [checkInMethod, setCheckInMethod] = useState('rfid');
   const [rfidInput, setRfidInput] = useState('');
@@ -59,10 +63,81 @@ export default function CheckInStation() {
   const streamRef = useRef(null);
   const detectRef = useRef(null);
 
+  /* Enrolled faces for face matching */
+  const [faceMatcher, setFaceMatcher] = useState(null);
+  const [enrolledMap, setEnrolledMap] = useState({}); // userId -> { name, student_id }
+  const [facesLoading, setFacesLoading] = useState(false);
+
   /* Location state */
   const [locationStatus, setLocationStatus] = useState('unknown');
-  const [deviceLocation, setDeviceLocation] = useState(null);
+  const [, setDeviceLocation] = useState(null);
   const [locationDistance, setLocationDistance] = useState(null);
+
+  /* ── Load events from API ────────────────────────────────── */
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await eventsAPI.getAll();
+        const list = res.data?.data || res.data || [];
+        setEvents(Array.isArray(list) ? list : []);
+      } catch {
+        toast.error('Failed to load events.');
+      } finally {
+        setEventsLoading(false);
+      }
+    })();
+  }, []);
+
+  /* ── Load enrolled faces for face matching ───────────────── */
+  useEffect(() => {
+    if (!selectedEvent) return;
+    (async () => {
+      setFacesLoading(true);
+      try {
+        const res = await enrollmentAPI.getEnrolledFaces();
+        const enrollments = res.data || [];
+
+        if (enrollments.length === 0) {
+          setFaceMatcher(null);
+          setFacesLoading(false);
+          return;
+        }
+
+        const labeledDescriptors = [];
+        const userMap = {};
+
+        for (const enrollment of enrollments) {
+          if (!enrollment.face_data) continue;
+          try {
+            const parsed = JSON.parse(enrollment.face_data);
+            const descriptors = parsed.map((d) => new Float32Array(d));
+            if (descriptors.length > 0) {
+              labeledDescriptors.push(
+                new faceapi.LabeledFaceDescriptors(String(enrollment.user_id), descriptors)
+              );
+              userMap[String(enrollment.user_id)] = {
+                name: enrollment.user?.name || 'Unknown',
+                student_id: enrollment.user?.student_id || '',
+                email: enrollment.user?.email || '',
+                user_id: enrollment.user_id,
+              };
+            }
+          } catch {
+            // Skip malformed entries
+          }
+        }
+
+        setEnrolledMap(userMap);
+        if (labeledDescriptors.length > 0) {
+          setFaceMatcher(new faceapi.FaceMatcher(labeledDescriptors, 0.6));
+        }
+      } catch {
+        toast.error('Failed to load enrolled faces.');
+      } finally {
+        setFacesLoading(false);
+      }
+    })();
+  }, [selectedEvent]);
 
   /* ── Geolocation ─────────────────────────────────────────── */
   useEffect(() => {
@@ -136,6 +211,14 @@ export default function CheckInStation() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkInMethod, selectedEvent]);
 
+  /* Attach stream to video element once it renders (fixes race condition) */
+  useEffect(() => {
+    if (cameraActive && streamRef.current && videoRef.current && !videoRef.current.srcObject) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [cameraActive, checkInMethod]);
+
   /* Draw face overlay */
   const drawOverlay = useCallback((detection) => {
     const canvas = canvasRef.current;
@@ -163,9 +246,15 @@ export default function CheckInStation() {
     }
   }, []);
 
-  /* Run face detection for check-in */
+  /* Run face detection for check-in — identifies which student */
   const runFaceCheckIn = useCallback(async () => {
     if (!videoRef.current || !modelsLoaded) return;
+
+    if (!faceMatcher) {
+      toast.error('No enrolled faces loaded. Ensure students have approved facial enrollments.');
+      return;
+    }
+
     setFaceDetecting(true);
     setFaceResult(null);
 
@@ -183,80 +272,128 @@ export default function CheckInStation() {
 
       if (detection) {
         drawOverlay(detection);
-        const score = Math.round(detection.detection.score * 100);
 
-        if (score >= 65) {
+        // Match against all enrolled faces
+        const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+
+        if (bestMatch.label !== 'unknown') {
+          const confidence = Math.round((1 - bestMatch.distance) * 100);
           matched = true;
           clearInterval(detectRef.current);
-          // Simulate matching against enrolled student
-          const student = mockStudentDB.find((s) => s.enrolled_face);
-          setFaceResult({ success: true, score, student });
+
+          const studentInfo = enrolledMap[bestMatch.label];
+          setFaceResult({ success: true, score: confidence, student: studentInfo });
           setFaceDetecting(false);
-          if (student) {
-            addCheckIn(student.name, student.student_id, 'face', score);
+
+          if (studentInfo) {
+            // Record attendance via API
+            try {
+              const res = await attendanceAPI.faceCheckIn(selectedEvent.id, { user_id: studentInfo.user_id });
+              const attendanceStatus = res.data?.status || 'present';
+              addCheckIn(studentInfo.name, studentInfo.student_id, 'face', confidence, attendanceStatus);
+              toast.success(`${studentInfo.name} checked in via Face Recognition (${confidence}% match) — ${attendanceStatus.toUpperCase()}`);
+            } catch (err) {
+              if (err.response?.status === 409) {
+                const existingStatus = err.response?.data?.attendance?.status || 'present';
+                addCheckIn(studentInfo.name, studentInfo.student_id, 'face', confidence, existingStatus);
+                toast(`${studentInfo.name} already checked in.`, { icon: 'ℹ️' });
+              } else {
+                toast.error(err.response?.data?.message || 'Failed to record attendance.');
+              }
+            }
           }
         }
       } else {
         drawOverlay(null);
       }
 
-      if (attempts >= 20 && !matched) {
+      if (attempts >= 30 && !matched) {
         clearInterval(detectRef.current);
         setFaceResult({ success: false, score: 0 });
         setFaceDetecting(false);
+        toast.error('Face not recognized. Student may not be enrolled.');
       }
     }, 500);
-  }, [modelsLoaded, drawOverlay]);
+  }, [modelsLoaded, faceMatcher, enrolledMap, drawOverlay, selectedEvent]);
 
   /* ── RFID scan handler ───────────────────────────────────── */
-  const handleRFIDScan = (e) => {
+  const handleRFIDScan = async (e) => {
     e.preventDefault();
-    const input = rfidInput.trim().toUpperCase();
-    if (!input) return;
+    const input = rfidInput.trim();
+    if (!input || !selectedEvent) return;
 
     setProcessingStatus('processing');
     setProcessMessage('Reading RFID tag...');
 
-    setTimeout(() => {
-      const student = mockStudentDB.find(
-        (s) => s.rfid_tag.toUpperCase() === input || s.student_id === input
-      );
-      if (student) {
-        addCheckIn(student.name, student.student_id, 'rfid', 100);
+    try {
+      const res = await attendanceAPI.rfidCheckIn(selectedEvent.id, { student_id: input });
+      const user = res.data?.user;
+      const attendanceStatus = res.data?.status || 'present';
+      const name = user?.name || 'Student';
+      const studentId = user?.student_id || input;
+
+      addCheckIn(name, studentId, 'rfid', 100, attendanceStatus);
+      setProcessingStatus('success');
+      setProcessMessage(`✓ ${name} checked in via RFID — ${attendanceStatus.toUpperCase()}`);
+      toast.success(`${name} checked in via RFID`);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        const user = err.response?.data?.attendance?.user;
+        const name = user?.name || 'Student';
         setProcessingStatus('success');
-        setProcessMessage(`✓ ${student.name} checked in via RFID`);
+        setProcessMessage(`${name} already checked in.`);
+        toast(`${name} already checked in.`, { icon: 'ℹ️' });
       } else {
         setProcessingStatus('error');
-        setProcessMessage('RFID tag not recognized. Please try again.');
+        setProcessMessage(err.response?.data?.message || 'RFID tag not recognized.');
+        toast.error(err.response?.data?.message || 'RFID tag not recognized.');
       }
-      setRfidInput('');
-      setTimeout(() => setProcessingStatus('idle'), 3000);
-    }, 800);
+    }
+    setRfidInput('');
+    setTimeout(() => setProcessingStatus('idle'), 3000);
   };
 
   /* ── Manual check-in handler ─────────────────────────────── */
-  const handleManualCheckIn = (e) => {
+  const handleManualCheckIn = async (e) => {
     e.preventDefault();
     const input = manualInput.trim();
-    if (!input) return;
+    if (!input || !selectedEvent) return;
 
-    const student = mockStudentDB.find(
-      (s) => s.student_id === input || s.name.toLowerCase().includes(input.toLowerCase())
-    );
-    if (student) {
-      addCheckIn(student.name, student.student_id, 'manual', null);
+    setProcessingStatus('processing');
+    setProcessMessage('Looking up student...');
+
+    try {
+      // Try RFID check-in with the student_id input
+      const res = await attendanceAPI.rfidCheckIn(selectedEvent.id, { student_id: input });
+      const user = res.data?.user;
+      const attendanceStatus = res.data?.status || 'present';
+      const name = user?.name || 'Student';
+      const studentId = user?.student_id || input;
+
+      addCheckIn(name, studentId, 'manual', null, attendanceStatus);
       setProcessingStatus('success');
-      setProcessMessage(`✓ ${student.name} checked in manually`);
-    } else {
-      setProcessingStatus('error');
-      setProcessMessage('Student not found.');
+      setProcessMessage(`✓ ${name} checked in manually — ${attendanceStatus.toUpperCase()}`);
+      toast.success(`${name} checked in manually`);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        const user = err.response?.data?.attendance?.user;
+        const name = user?.name || 'Student';
+        setProcessingStatus('success');
+        setProcessMessage(`${name} already checked in.`);
+        toast(`${name} already checked in.`, { icon: 'ℹ️' });
+      } else {
+        setProcessingStatus('error');
+        setProcessMessage(err.response?.data?.message || 'Student not found.');
+        toast.error(err.response?.data?.message || 'Student not found.');
+      }
     }
     setManualInput('');
     setTimeout(() => setProcessingStatus('idle'), 3000);
   };
 
   /* ── Add check-in record ─────────────────────────────────── */
-  const addCheckIn = (name, studentId, method, score) => {
+  const addCheckIn = (name, studentId, method, score, attendanceStatus) => {
+    const status = attendanceStatus || determineAttendanceStatus(selectedEvent);
     setRecentCheckins((prev) => [
       {
         id: Date.now(),
@@ -264,6 +401,7 @@ export default function CheckInStation() {
         student_id: studentId,
         method,
         score,
+        status,
         time: new Date().toISOString(),
         location: locationStatus,
       },
@@ -343,8 +481,19 @@ export default function CheckInStation() {
       {!selectedEvent ? (
         <>
           <h3 className="text-lg font-semibold text-slate-900">Select Event</h3>
+          {eventsLoading ? (
+            <div className="text-center py-8">
+              <Loader2 className="w-6 h-6 text-emerald-500 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-slate-500">Loading events...</p>
+            </div>
+          ) : events.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="w-6 h-6 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">No events found.</p>
+            </div>
+          ) : (
           <div className="grid md:grid-cols-3 gap-4">
-            {mockEvents.filter((e) => e.status === 'ongoing' || e.status === 'upcoming').map((event) => (
+            {events.filter((e) => e.status === 'ongoing' || e.status === 'upcoming').map((event) => (
               <button
                 key={event.id}
                 onClick={() => setSelectedEvent(event)}
@@ -366,6 +515,7 @@ export default function CheckInStation() {
               </button>
             ))}
           </div>
+          )}
         </>
       ) : (
         <>
@@ -490,12 +640,16 @@ export default function CheckInStation() {
                               <>
                                 <CheckCircle2 className="w-12 h-12 text-emerald-400" />
                                 <p className="text-white font-semibold">{faceResult.student?.name}</p>
-                                <p className="text-white/70 text-sm">Confidence: {faceResult.score}%</p>
+                                {faceResult.student?.student_id && (
+                                  <p className="text-white/60 text-xs">{faceResult.student.student_id}</p>
+                                )}
+                                <p className="text-white/70 text-sm">Match: {faceResult.score}%</p>
                               </>
                             ) : (
                               <>
                                 <XCircle className="w-12 h-12 text-slate-400" />
                                 <p className="text-white font-semibold">No match found</p>
+                                <p className="text-white/60 text-xs">Student may not be enrolled</p>
                               </>
                             )}
                           </div>
@@ -510,9 +664,9 @@ export default function CheckInStation() {
                   </div>
                   <div className="flex justify-center gap-3">
                     {!faceDetecting && !faceResult && (
-                      <button onClick={runFaceCheckIn} disabled={!cameraActive || !modelsLoaded} className="btn-primary text-sm flex items-center gap-2">
-                        <ScanFace className="w-4 h-4" />
-                        Start Face Check-In
+                      <button onClick={runFaceCheckIn} disabled={!cameraActive || !modelsLoaded || facesLoading || !faceMatcher} className="btn-primary text-sm flex items-center gap-2">
+                        {facesLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanFace className="w-4 h-4" />}
+                        {facesLoading ? 'Loading enrolled faces...' : !faceMatcher ? 'No enrolled faces' : 'Start Face Check-In'}
                       </button>
                     )}
                     {faceResult && (
@@ -587,6 +741,14 @@ export default function CheckInStation() {
                           <MethodIcon className="w-4 h-4 text-emerald-600" />
                           <span className="text-xs text-slate-500">{methodLabel[checkin.method]}</span>
                         </div>
+                        <span className={cn(
+                          'text-xs font-semibold px-2 py-0.5 rounded-full capitalize',
+                          checkin.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
+                          checkin.status === 'late' ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        )}>
+                          {checkin.status}
+                        </span>
                         {checkin.location === 'inside' && (
                           <span className="text-xs text-emerald-600 flex items-center gap-1">
                             <MapPin className="w-3 h-3" />On Campus
@@ -595,7 +757,7 @@ export default function CheckInStation() {
                         <span className="text-xs text-slate-400">
                           {new Date(checkin.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </span>
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <CheckCircle2 className={cn('w-5 h-5', checkin.status === 'present' ? 'text-emerald-500' : 'text-amber-500')} />
                       </div>
                     </div>
                   );

@@ -28,6 +28,15 @@ Route::middleware('auth:sanctum')->group(function () {
     // Attendance (my own)
     Route::get('/my-attendance', [AttendanceController::class, 'myAttendance']);
 
+    // ── Check-in routes (student, organizer, admin) ──
+    Route::middleware('role:student,organizer,admin')->group(function () {
+        Route::post('/events/{event}/check-in', [AttendanceController::class, 'checkIn']);
+        Route::post('/events/{event}/face-check-in', [AttendanceController::class, 'faceCheckIn']);
+        Route::post('/events/{event}/rfid-check-in', [AttendanceController::class, 'rfidCheckIn']);
+        Route::post('/events/{event}/manual-check-in', [AttendanceController::class, 'manualCheckIn']);
+        Route::get('/enrolled-faces', [FacialEnrollmentController::class, 'enrolledFaces']);
+    });
+
     // ── Student routes ──
     Route::middleware('role:student')->group(function () {
         Route::post('/facial-enrollment', [FacialEnrollmentController::class, 'enroll']);
@@ -43,10 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Attendance management
         Route::get('/events/{event}/attendance', [AttendanceController::class, 'byEvent']);
-        Route::post('/events/{event}/check-in', [AttendanceController::class, 'checkIn']);
-        Route::post('/events/{event}/manual-check-in', [AttendanceController::class, 'manualCheckIn']);
-        Route::post('/events/{event}/rfid-check-in', [AttendanceController::class, 'rfidCheckIn']);
-        Route::post('/events/{event}/face-check-in', [AttendanceController::class, 'faceCheckIn']);
         Route::get('/events/{event}/live-dashboard', [AttendanceController::class, 'liveDashboard']);
 
         // Reports (organizer + admin)

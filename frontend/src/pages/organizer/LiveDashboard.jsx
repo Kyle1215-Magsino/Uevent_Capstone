@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { PageHeader, SearchInput, StatsCard } from '../../components/ui';
 import { cn, getInitials, formatDateTime } from '../../lib/utils';
+import { attendanceAPI, eventsAPI } from '../../api/endpoints';
 import {
   Radio,
   Users,
@@ -14,74 +16,110 @@ import {
   ClipboardCheck,
   Gauge,
   UserMinus,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 
-// Mock live data
-const mockEventInfo = {
-  id: 2,
-  title: 'Cultural Night 2026',
-  date: '2026-03-03T18:00:00',
-  venue: 'University Gymnasium',
-  capacity: 500,
-  method: 'face_recognition',
-};
-
-const initialAttendees = [
-  { id: 1, name: 'Juan Dela Cruz', student_id: '2024-00001', time: '2026-03-03T17:45:00', method: 'face' },
-  { id: 2, name: 'Maria Santos', student_id: '2024-00002', time: '2026-03-03T17:48:00', method: 'face' },
-  { id: 3, name: 'Ana Rivera', student_id: '2024-00004', time: '2026-03-03T17:50:00', method: 'face' },
-  { id: 4, name: 'Pedro Gomez', student_id: '2024-00003', time: '2026-03-03T17:52:00', method: 'rfid' },
-  { id: 5, name: 'Carlos Mendoza', student_id: '2024-00005', time: '2026-03-03T17:55:00', method: 'manual' },
-];
-
 export default function LiveDashboard() {
-  const [attendees, setAttendees] = useState(initialAttendees);
+  const { id: eventId } = useParams();
+  const [event, setEvent] = useState(null);
+  const [attendees, setAttendees] = useState([]);
+  const [methodBreakdown, setMethodBreakdown] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [isLive, setIsLive] = useState(true);
 
-  // Simulate real-time updates
+  const fetchData = useCallback(async (showLoader = false) => {
+    if (showLoader) setLoading(true);
+    try {
+      const res = await attendanceAPI.getLiveDashboard(eventId);
+      const data = res.data;
+      setEvent(data.event);
+      setMethodBreakdown(data.method_breakdown || {});
+      // Map recent_checkins to a flat attendee list
+      const mapped = (data.recent_checkins || []).map((a) => ({
+        id: a.id,
+        name: a.user?.name || 'Unknown',
+        student_id: a.user?.student_id || '—',
+        time: a.check_in_time,
+        method: a.method,
+        status: a.status,
+      }));
+      setAttendees(mapped);
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  }, [eventId]);
+
+  // Initial load
+  useEffect(() => { fetchData(true); }, [fetchData]);
+
+  // Auto-refresh every 5 seconds when live
   useEffect(() => {
     if (!isLive) return;
-    const interval = setInterval(() => {
-      // Simulated new check-in
-      const names = ['Rosa Garcia', 'Luis Torres', 'Diana Cruz', 'Marco Reyes', 'Linda Tan'];
-      const methods = ['face', 'face', 'face', 'rfid', 'manual'];
-      const randomIdx = Math.floor(Math.random() * names.length);
-      const newAttendee = {
-        id: Date.now(),
-        name: names[randomIdx],
-        student_id: `2024-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`,
-        time: new Date().toISOString(),
-        method: methods[randomIdx],
-      };
-      setAttendees((prev) => [newAttendee, ...prev]);
-    }, 5000);
+    const interval = setInterval(() => fetchData(false), 5000);
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isLive, fetchData]);
 
   const filtered = attendees.filter(
     (a) =>
       a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a.student_id.includes(search)
+      (a.student_id || '').includes(search)
   );
 
+  const totalCheckins = event?.total_attendees || attendees.length;
+  const presentCount = event?.present_count || attendees.filter(a => a.status === 'present').length;
+  const lateCount = event?.late_count || attendees.filter(a => a.status === 'late').length;
+  const capacity = event?.capacity || 0;
+  const remaining = Math.max(capacity - totalCheckins, 0);
+  const fillRate = capacity > 0 ? ((totalCheckins / capacity) * 100).toFixed(1) : '0.0';
+
   const methodIcon = {
+    facial: <ScanFace className="w-4 h-4 text-emerald-600" />,
     face: <ScanFace className="w-4 h-4 text-emerald-600" />,
     rfid: <CreditCard className="w-4 h-4 text-emerald-600" />,
     manual: <ClipboardList className="w-4 h-4 text-slate-600" />,
   };
 
   const methodLabel = {
+    facial: 'Face Recognition',
     face: 'Face Recognition',
     rfid: 'RFID',
     manual: 'Manual',
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="card p-12 text-center">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading live dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="card p-12 text-center">
+          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+          <p className="text-sm text-red-600 font-medium">{error || 'Event not found.'}</p>
+          <Link to="/" className="btn-secondary mt-4 inline-flex">Go Back</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in">
       <PageHeader
         title="Live Attendance Dashboard"
-        description={mockEventInfo.title}
+        description={`${event.title} — ${event.venue || ''}`}
         actions={
           <div className="flex items-center gap-3">
             <button
@@ -94,7 +132,7 @@ export default function LiveDashboard() {
               <Radio className={cn('w-4 h-4', isLive && 'animate-pulse')} />
               {isLive ? 'Live' : 'Paused'}
             </button>
-            <button className="btn-secondary flex items-center gap-2 text-sm">
+            <button onClick={() => fetchData(false)} className="btn-secondary flex items-center gap-2 text-sm">
               <RefreshCw className="w-4 h-4" />
               Refresh
             </button>
@@ -103,28 +141,34 @@ export default function LiveDashboard() {
       />
 
       {/* Live Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard
           title="Total Check-ins"
-          value={attendees.length}
+          value={totalCheckins}
           icon={ClipboardCheck}
           iconColor="primary"
         />
         <StatsCard
-          title="Capacity"
-          value={mockEventInfo.capacity}
-          icon={Users}
+          title="Present"
+          value={presentCount}
+          icon={UserCheck}
+          iconColor="emerald"
+        />
+        <StatsCard
+          title="Late"
+          value={lateCount}
+          icon={AlertTriangle}
           iconColor="emerald"
         />
         <StatsCard
           title="Fill Rate"
-          value={`${((attendees.length / mockEventInfo.capacity) * 100).toFixed(1)}%`}
+          value={`${fillRate}%`}
           icon={Gauge}
           iconColor="emerald"
         />
         <StatsCard
           title="Remaining"
-          value={Math.max(mockEventInfo.capacity - attendees.length, 0)}
+          value={remaining}
           icon={UserMinus}
           iconColor="emerald"
         />
@@ -135,25 +179,25 @@ export default function LiveDashboard() {
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-slate-700">Attendance Progress</span>
           <span className="text-sm text-slate-500">
-            {attendees.length} / {mockEventInfo.capacity}
+            {totalCheckins} / {capacity}
           </span>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-4">
           <div
             className="bg-primary-500 h-4 rounded-full transition-all duration-500"
-            style={{ width: `${Math.min((attendees.length / mockEventInfo.capacity) * 100, 100)}%` }}
+            style={{ width: `${Math.min(parseFloat(fillRate), 100)}%` }}
           />
         </div>
 
         {/* Method breakdown */}
         <div className="flex items-center gap-6 mt-4">
-          {['face', 'rfid', 'manual'].map((method) => {
-            const count = attendees.filter((a) => a.method === method).length;
+          {['facial', 'rfid', 'manual'].map((method) => {
+            const count = methodBreakdown[method] || 0;
             return (
               <div key={method} className="flex items-center gap-2">
-                {methodIcon[method]}
+                {methodIcon[method] || methodIcon.manual}
                 <span className="text-sm text-slate-600">
-                  {methodLabel[method]}: <strong>{count}</strong>
+                  {methodLabel[method] || method}: <strong>{count}</strong>
                 </span>
               </div>
             );
@@ -201,6 +245,14 @@ export default function LiveDashboard() {
                   {methodIcon[attendee.method]}
                   <span className="text-xs text-slate-500">{methodLabel[attendee.method]}</span>
                 </div>
+                <span className={cn(
+                  'text-xs font-semibold px-2 py-0.5 rounded-full capitalize',
+                  attendee.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
+                  attendee.status === 'late' ? 'bg-amber-100 text-amber-700' :
+                  'bg-red-100 text-red-700'
+                )}>
+                  {attendee.status}
+                </span>
                 <div className="flex items-center gap-1.5 text-xs text-slate-400">
                   <Clock className="w-3 h-3" />
                   {new Date(attendee.time).toLocaleTimeString('en-US', {
@@ -209,7 +261,7 @@ export default function LiveDashboard() {
                     second: '2-digit',
                   })}
                 </div>
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                <CheckCircle2 className={cn('w-5 h-5', attendee.status === 'present' ? 'text-emerald-500' : 'text-amber-500')} />
               </div>
             </div>
           ))}

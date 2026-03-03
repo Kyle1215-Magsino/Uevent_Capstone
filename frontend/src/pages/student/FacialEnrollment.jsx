@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
+import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/ui';
 import { cn } from '../../lib/utils';
+import { enrollmentAPI } from '../../api/endpoints';
 import {
   ScanFace, Upload, CheckCircle, AlertTriangle, Info,
   ArrowRight, RotateCcw, Video, VideoOff, CircleDot, ShieldCheck, Loader2,
@@ -243,10 +245,34 @@ export default function FacialEnrollment() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     stopCamera();
-    setStep(3);
-    setEnrollmentStatus('pending');
+    setScanStatus('processing');
+    setScanMessage('Submitting enrollment data…');
+
+    // Serialize Float32Array descriptors to plain arrays for JSON
+    const serializedDescriptors = descriptorsRef.current.map((d) => Array.from(d));
+
+    try {
+      await enrollmentAPI.enroll({
+        images_count: serializedDescriptors.length,
+        face_data: JSON.stringify(serializedDescriptors),
+      });
+      setStep(3);
+      setEnrollmentStatus('pending');
+      toast.success('Enrollment submitted successfully!');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to submit enrollment.';
+      if (err.response?.status === 409) {
+        setStep(3);
+        setEnrollmentStatus('pending');
+        toast('You already have a pending or approved enrollment.', { icon: 'ℹ️' });
+      } else {
+        toast.error(msg);
+        setScanStatus('failed');
+        setScanMessage('Failed to submit enrollment. Please try again.');
+      }
+    }
   };
 
   const handleRetry = () => {

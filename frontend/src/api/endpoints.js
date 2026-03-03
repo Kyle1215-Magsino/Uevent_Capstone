@@ -51,6 +51,7 @@ export const enrollmentAPI = {
   getAll: (params) => api.get('/api/facial-enrollments', { params }),
   approve: (id) => api.patch(`/api/facial-enrollments/${id}/approve`),
   reject: (id) => api.patch(`/api/facial-enrollments/${id}/reject`),
+  getEnrolledFaces: () => api.get('/api/enrolled-faces'),
 };
 
 // ── Analytics (Admin) ──

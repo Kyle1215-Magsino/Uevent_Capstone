@@ -83,7 +83,7 @@ export function DataTable({ columns, data, emptyMessage = 'No data found.', page
   };
 
   return (
-    <div>
+    <div className="border border-emerald-400 rounded-2xl overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>

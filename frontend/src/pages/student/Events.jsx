@@ -1,30 +1,137 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PageHeader, SearchInput, StatusBadge } from '../../components/ui';
+import { PageHeader, SearchInput, StatusBadge, DataTable } from '../../components/ui';
 import { cn, formatDateTime } from '../../lib/utils';
-import { Calendar, MapPin, Clock, Users, ScanFace, CreditCard, ClipboardList, MapPinCheck } from 'lucide-react';
+import { eventsAPI } from '../../api/endpoints';
+import { Calendar, MapPin, Users, ScanFace, CreditCard, ClipboardList, MapPinCheck, Loader2 } from 'lucide-react';
 
-const mockEvents = [
-  { id: 1, title: 'Leadership Training Seminar', description: 'Annual leadership training for all student leaders and officers.', date: '2026-03-05T09:00:00', end_date: '2026-03-05T17:00:00', venue: 'Main Auditorium', status: 'upcoming', method: 'face_recognition', capacity: 200, organizer: 'CSG' },
-  { id: 2, title: 'Cultural Night 2026', description: 'A grand celebration of diverse cultures within our university community.', date: '2026-03-03T18:00:00', end_date: '2026-03-03T22:00:00', venue: 'University Gymnasium', status: 'ongoing', method: 'face_recognition', capacity: 500, organizer: 'Cultural Committee' },
-  { id: 3, title: 'Academic Excellence Awards', description: 'Recognition ceremony for outstanding academic performers.', date: '2026-03-01T14:00:00', end_date: '2026-03-01T17:00:00', venue: 'Convention Hall', status: 'completed', method: 'rfid', capacity: 200, organizer: 'Academic Affairs' },
-  { id: 5, title: 'Freshman Orientation', description: 'Welcome and orientation program for new students.', date: '2026-03-10T08:00:00', end_date: '2026-03-10T16:00:00', venue: 'Main Auditorium', status: 'upcoming', method: 'face_recognition', capacity: 800, organizer: 'Student Affairs' },
-  { id: 6, title: 'Inter-College Sports Fest', description: 'Annual sports competition among all college teams.', date: '2026-03-15T07:00:00', end_date: '2026-03-17T18:00:00', venue: 'Sports Complex', status: 'upcoming', method: 'rfid', capacity: 1000, organizer: 'Sports Committee' },
-];
-
-const methodConfig = {
-  face_recognition: { icon: ScanFace, label: 'Face Recognition', color: 'text-emerald-600 bg-emerald-100' },
-  rfid: { icon: CreditCard, label: 'RFID', color: 'text-emerald-600 bg-emerald-100' },
-  location: { icon: MapPinCheck, label: 'Location Tracking', color: 'text-emerald-600 bg-emerald-100' },
-  manual: { icon: ClipboardList, label: 'Manual', color: 'text-slate-600 bg-slate-100' },
+const methodLabels = {
+  facial: 'Face Recognition',
+  face_recognition: 'Face Recognition',
+  rfid: 'RFID',
+  any: 'Any Method',
+  location: 'Location Tracking',
+  manual: 'Manual',
 };
+
+const methodColors = {
+  facial: 'bg-emerald-100 text-emerald-800',
+  face_recognition: 'bg-emerald-100 text-emerald-800',
+  rfid: 'bg-emerald-100 text-emerald-800',
+  any: 'bg-emerald-100 text-emerald-800',
+  location: 'bg-emerald-100 text-emerald-800',
+  manual: 'bg-slate-100 text-slate-800',
+};
+
+const columns = [
+  {
+    key: 'title',
+    label: 'Event',
+    render: (_, row) => (
+      <div>
+        <p className="font-semibold text-slate-900">{row.title}</p>
+        {row.description && <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{row.description}</p>}
+      </div>
+    ),
+  },
+  {
+    key: 'date',
+    label: 'Date',
+    render: (val) => (
+      <span className="flex items-center gap-1.5 text-slate-600">
+        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+        {formatDateTime(val)}
+      </span>
+    ),
+  },
+  {
+    key: 'venue',
+    label: 'Venue',
+    render: (val) => (
+      <span className="flex items-center gap-1.5 text-slate-600">
+        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+        {val}
+      </span>
+    ),
+  },
+  {
+    key: 'organizer',
+    label: 'Organizer',
+    render: (val) => <span className="text-slate-600">{val?.name || val || '—'}</span>,
+  },
+  {
+    key: 'capacity',
+    label: 'Capacity',
+    render: (val) => (
+      <span className="flex items-center gap-1.5 text-slate-600">
+        <Users className="w-3.5 h-3.5 text-slate-400" />
+        {val || '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'attendance_method',
+    label: 'Method',
+    render: (val, row) => {
+      const method = val || row.method || 'any';
+      return (
+        <span className={cn('badge text-xs', methodColors[method] || 'bg-slate-100 text-slate-800')}>
+          {methodLabels[method] || method}
+        </span>
+      );
+    },
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    render: (val) => <StatusBadge status={val} />,
+  },
+  {
+    key: 'actions',
+    label: 'Actions',
+    sortable: false,
+    render: (_, row) => (
+      <div className="flex items-center gap-2">
+        {(row.status === 'ongoing' || row.status === 'upcoming') && (
+          <Link to={`/student/checkin/${row.id}`} className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+            <MapPinCheck className="w-3.5 h-3.5" />
+            Check In
+          </Link>
+        )}
+      </div>
+    ),
+  },
+];
 
 export default function StudentEvents() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filtered = mockEvents.filter((e) => {
-    const matchSearch = e.title.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await eventsAPI.getAll({ per_page: 50 });
+        if (!cancelled) {
+          setEvents(res.data?.data || res.data || []);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.response?.data?.message || 'Failed to load events.');
+          setLoading(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = events.filter((e) => {
+    const matchSearch = e.title?.toLowerCase().includes(search.toLowerCase()) ||
+      (e.venue || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || e.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -59,74 +166,28 @@ export default function StudentEvents() {
         </div>
       </div>
 
-      {/* Events Grid */}
-      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((event) => {
-          const method = methodConfig[event.method];
-          return (
-            <div key={event.id} className="card-hover overflow-hidden">
-              {/* Status header bar */}
-              <div
-                className={cn(
-                  'px-5 py-2 text-xs font-semibold uppercase tracking-wide',
-                  event.status === 'upcoming' ? 'bg-emerald-500 text-white' :
-                  event.status === 'ongoing' ? 'bg-primary-500 text-white' :
-                  'bg-slate-200 text-slate-600'
-                )}
-              >
-                {event.status}
-              </div>
-
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">{event.title}</h3>
-                <p className="text-sm text-slate-500 line-clamp-2 mb-4">{event.description}</p>
-
-                <div className="space-y-2 text-sm text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    <span>{formatDateTime(event.date)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    <span>{event.venue}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-slate-400" />
-                    <span>{event.organizer} · Capacity: {event.capacity}</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <span className={cn('badge', method.color)}>
-                    <method.icon className="w-3 h-3 mr-1" />
-                    {method.label}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    {event.status === 'upcoming' && (
-                      <button className="btn-secondary text-sm px-3 py-1.5">
-                        Register
-                      </button>
-                    )}
-                    {event.status === 'ongoing' && (
-                      <Link to="/student/checkin" className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1">
-                        <MapPinCheck className="w-3.5 h-3.5" />
-                        Check In
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {filtered.length === 0 && (
+      {/* Loading / Error */}
+      {loading && (
         <div className="card p-12 text-center">
-          <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900">No events found</h3>
-          <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filter.</p>
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading events...</p>
         </div>
+      )}
+
+      {error && !loading && (
+        <div className="card p-12 text-center">
+          <p className="text-sm text-red-600 font-medium">{error}</p>
+        </div>
+      )}
+
+      {/* Events DataTable */}
+      {!loading && !error && (
+        <DataTable
+          columns={columns}
+          data={filtered}
+          emptyMessage="No events found. Try adjusting your search or filter."
+          pageSize={10}
+        />
       )}
     </div>
   );

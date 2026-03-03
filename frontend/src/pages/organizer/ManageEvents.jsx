@@ -1,21 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { PageHeader, SearchInput, StatusBadge, ConfirmDialog, Modal } from '../../components/ui';
+import { PageHeader, SearchInput, StatusBadge, ConfirmDialog, Modal, DataTable } from '../../components/ui';
 import { cn, formatDateTime } from '../../lib/utils';
-import { CalendarPlus, Eye, Edit, Trash2, MapPin, Clock, Users, MoreVertical, ScanFace, CreditCard, ClipboardList, Info, Navigation } from 'lucide-react';
-
-const mockEvents = [
-  { id: 1, title: 'Leadership Training Seminar', description: '', date: '2026-03-05', start_time: '09:00', end_time: '12:00', venue: 'Main Auditorium', status: 'upcoming', attendance_method: 'face_recognition', attendees: 0, capacity: 200 },
-  { id: 2, title: 'Cultural Night 2026', description: '', date: '2026-03-03', start_time: '18:00', end_time: '21:00', venue: 'University Gymnasium', status: 'ongoing', attendance_method: 'face_recognition', attendees: 342, capacity: 500 },
-  { id: 3, title: 'Academic Excellence Awards', description: '', date: '2026-03-01', start_time: '14:00', end_time: '17:00', venue: 'Convention Hall', status: 'completed', attendance_method: 'rfid', attendees: 189, capacity: 200 },
-  { id: 4, title: 'Environmental Awareness Campaign', description: '', date: '2026-02-28', start_time: '08:00', end_time: '12:00', venue: 'University Grounds', status: 'completed', attendance_method: 'manual', attendees: 156, capacity: 300 },
-];
+import { eventsAPI } from '../../api/endpoints';
+import toast from 'react-hot-toast';
+import { CalendarPlus, Eye, Edit, Trash2, MapPin, Clock, Users, MoreVertical, ScanFace, CreditCard, ClipboardList, Info, Navigation, Loader2, Radio } from 'lucide-react';
 
 const methodLabels = {
+  facial: 'Face Recognition',
   face_recognition: 'Face Recognition',
   rfid: 'RFID',
   manual: 'Manual',
+  any: 'Any Method',
   location: 'Location Tracking',
+};
+
+const methodColors = {
+  facial: 'bg-emerald-100 text-emerald-800',
+  face_recognition: 'bg-emerald-100 text-emerald-800',
+  rfid: 'bg-emerald-100 text-emerald-800',
+  any: 'bg-emerald-100 text-emerald-800',
+  location: 'bg-emerald-100 text-emerald-800',
+  manual: 'bg-slate-100 text-slate-800',
 };
 
 const attendanceMethods = [
@@ -117,13 +123,27 @@ function EventFormFields({ form, onChange }) {
 export default function ManageEvents() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [activeDropdown, setActiveDropdown] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editEvent, setEditEvent] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [createForm, setCreateForm] = useState(emptyForm);
   const [editForm, setEditForm] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+
+  const fetchEvents = async () => {
+    try {
+      const res = await eventsAPI.getAll({ per_page: 100 });
+      setEvents(res.data?.data || res.data || []);
+    } catch {
+      toast.error('Failed to load events.');
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchEvents(); }, []);
 
   const openCreate = () => {
     setCreateForm(emptyForm);
@@ -134,34 +154,156 @@ export default function ManageEvents() {
     setEditForm({
       title: event.title,
       description: event.description || '',
-      date: event.date,
-      start_time: event.start_time,
-      end_time: event.end_time,
+      date: event.date?.split('T')[0] || event.date,
+      start_time: event.start_time || '',
+      end_time: event.end_time || '',
       venue: event.venue,
-      capacity: String(event.capacity),
-      attendance_method: event.attendance_method,
+      capacity: String(event.capacity || ''),
+      attendance_method: event.attendance_method || 'facial',
     });
     setEditEvent(event);
-    setActiveDropdown(null);
   };
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => { setLoading(false); setShowCreateModal(false); }, 600);
+    try {
+      await eventsAPI.create(createForm);
+      toast.success('Event created successfully!');
+      setShowCreateModal(false);
+      fetchEvents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create event.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdate = (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => { setLoading(false); setEditEvent(null); }, 600);
+    try {
+      await eventsAPI.update(editEvent.id, editForm);
+      toast.success('Event updated successfully!');
+      setEditEvent(null);
+      fetchEvents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update event.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filtered = mockEvents.filter((e) => {
-    const matchSearch = e.title.toLowerCase().includes(search.toLowerCase());
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    try {
+      await eventsAPI.delete(deleteConfirm.id);
+      toast.success('Event deleted.');
+      setDeleteConfirm(null);
+      fetchEvents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete event.');
+    }
+  };
+
+  const filtered = events.filter((e) => {
+    const matchSearch = (e.title || '').toLowerCase().includes(search.toLowerCase()) ||
+      (e.venue || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || e.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  const columns = [
+    {
+      key: 'title',
+      label: 'Event',
+      render: (_, row) => (
+        <div>
+          <p className="font-semibold text-slate-900">{row.title}</p>
+          {row.description && <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{row.description}</p>}
+        </div>
+      ),
+    },
+    {
+      key: 'date',
+      label: 'Date',
+      render: (val) => (
+        <span className="flex items-center gap-1.5 text-slate-600">
+          <Clock className="w-3.5 h-3.5 text-slate-400" />
+          {formatDateTime(val)}
+        </span>
+      ),
+    },
+    {
+      key: 'venue',
+      label: 'Venue',
+      render: (val) => (
+        <span className="flex items-center gap-1.5 text-slate-600">
+          <MapPin className="w-3.5 h-3.5 text-slate-400" />
+          {val}
+        </span>
+      ),
+    },
+    {
+      key: 'attendance_method',
+      label: 'Method',
+      render: (val) => {
+        const method = val || 'any';
+        return (
+          <span className={cn('badge text-xs', methodColors[method] || 'bg-slate-100 text-slate-800')}>
+            {methodLabels[method] || method}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'total_attendees',
+      label: 'Attendees',
+      render: (val, row) => {
+        const attendees = val || row.present_count + row.late_count || 0;
+        const capacity = row.capacity || 0;
+        const pct = capacity > 0 ? Math.min((attendees / capacity) * 100, 100) : 0;
+        return (
+          <div className="flex items-center gap-2 min-w-[120px]">
+            <div className="flex-1">
+              <div className="w-full bg-slate-100 rounded-full h-1.5">
+                <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+            <span className="text-xs text-slate-500 whitespace-nowrap">{attendees}/{capacity}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (val) => <StatusBadge status={val} />,
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      sortable: false,
+      render: (_, row) => (
+        <div className="flex items-center gap-1.5">
+          {row.status === 'ongoing' && (
+            <Link to={`/organizer/events/${row.id}/live`} className="btn-primary text-xs px-2 py-1 flex items-center gap-1">
+              <Radio className="w-3 h-3" />Live
+            </Link>
+          )}
+          <Link to={`/organizer/events/${row.id}`} className="btn-secondary text-xs px-2 py-1 flex items-center gap-1">
+            <Eye className="w-3 h-3" />View
+          </Link>
+          <button onClick={() => openEdit(row)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-primary-50/30 rounded-lg">
+            <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setDeleteConfirm(row)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -199,80 +341,26 @@ export default function ManageEvents() {
         </div>
       </div>
 
-      {/* Events List */}
-      <div className="space-y-4">
-        {filtered.map((event) => (
-          <div key={event.id} className="card-hover">
-            <div className="p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <h3 className="text-lg font-semibold text-slate-900">{event.title}</h3>
-                    <StatusBadge status={event.status} />
-                  </div>
-                  <div className="grid sm:grid-cols-3 gap-2 text-sm text-slate-500">
-                    <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{formatDateTime(event.date)}</span>
-                    <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{event.venue}</span>
-                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />{event.attendees}/{event.capacity} attendees</span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-3">
-                    <span className="badge-info text-xs">{methodLabels[event.attendance_method]}</span>
-                    <div className="flex-1 max-w-xs">
-                      <div className="w-full bg-slate-100 rounded-full h-1.5">
-                        <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: `${Math.min((event.attendees / event.capacity) * 100, 100)}%` }} />
-                      </div>
-                    </div>
-                    <span className="text-xs text-slate-400">{((event.attendees / event.capacity) * 100).toFixed(0)}%</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 ml-4">
-                  {event.status === 'ongoing' && (
-                    <Link to={`/organizer/events/${event.id}/live`} className="btn-primary text-sm">Live Dashboard</Link>
-                  )}
-                  <Link to={`/organizer/events/${event.id}`} className="btn-secondary text-sm flex items-center gap-1">
-                    <Eye className="w-4 h-4" />View
-                  </Link>
-                  <div className="relative">
-                    <button onClick={() => setActiveDropdown(activeDropdown === event.id ? null : event.id)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-primary-50/30 rounded-lg">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {activeDropdown === event.id && (
-                      <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-100 rounded-xl shadow-lg py-1 z-10">
-                        <button onClick={() => openEdit(event)} className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-primary-50/30">
-                          <Edit className="w-4 h-4" />Edit
-                        </button>
-                        <button
-                          onClick={() => { setDeleteConfirm(event); setActiveDropdown(null); }}
-                          className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50"
-                        >
-                          <Trash2 className="w-4 h-4" />Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="card p-12 text-center">
-            <CalendarPlus className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-slate-900">No events found</h3>
-            <p className="text-sm text-slate-500 mt-1">Create your first event to get started.</p>
-            <button onClick={openCreate} className="btn-primary text-sm mt-4 inline-flex items-center gap-2">
-              <CalendarPlus className="w-4 h-4" />Create Event
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Events DataTable */}
+      {eventsLoading ? (
+        <div className="card p-12 text-center">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500">Loading events...</p>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filtered}
+          emptyMessage="No events found. Create your first event to get started."
+          pageSize={10}
+        />
+      )}
 
       {/* Delete Confirmation */}
       <ConfirmDialog
         open={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
-        onConfirm={() => setDeleteConfirm(null)}
+        onConfirm={handleDelete}
         title="Delete Event"
         message={`Are you sure you want to delete "${deleteConfirm?.title}"? All attendance records for this event will be lost.`}
         confirmText="Delete"
