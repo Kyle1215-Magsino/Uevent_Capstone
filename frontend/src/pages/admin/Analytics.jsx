@@ -44,8 +44,8 @@ const peakHoursData = [
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-xl shadow-lg px-4 py-3 text-sm">
-      <p className="font-semibold text-slate-900 mb-1">{label}</p>
+    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur border border-emerald-200 dark:border-slate-700 rounded-xl shadow-lg px-4 py-3 text-sm">
+      <p className="font-semibold text-slate-900 dark:text-white mb-1">{label}</p>
       {payload.map((entry, i) => (
         <p key={i} style={{ color: entry.color }} className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -75,7 +75,7 @@ export default function Analytics() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Monthly Attendance Area Chart */}
         <div className="card p-6">
-          <h3 className="font-semibold text-slate-900 mb-6">Monthly Attendance Trend</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-white mb-6">Monthly Attendance Trend</h3>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <defs>
@@ -95,7 +95,7 @@ export default function Analytics() {
 
         {/* Method Distribution – Pie Chart */}
         <div className="card p-6">
-          <h3 className="font-semibold text-slate-900 mb-6">Attendance Method Distribution</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-white mb-6">Attendance Method Distribution</h3>
           <div className="flex items-center justify-center gap-6">
             <ResponsiveContainer width="50%" height={220}>
               <PieChart>
@@ -125,8 +125,8 @@ export default function Analytics() {
                 <div key={m.method} className="flex items-center gap-3">
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{m.percentage}%</p>
-                    <p className="text-xs text-slate-500">{m.method}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{m.percentage}%</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{m.method}</p>
                   </div>
                 </div>
               ))}
@@ -136,7 +136,7 @@ export default function Analytics() {
 
         {/* Top Events – Horizontal Bar Chart */}
         <div className="card p-6">
-          <h3 className="font-semibold text-slate-900 mb-6">Top Events by Attendance</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-white mb-6">Top Events by Attendance</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={topEvents} layout="vertical" margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
@@ -150,7 +150,7 @@ export default function Analytics() {
 
         {/* Peak Hours – Bar Chart */}
         <div className="card p-6">
-          <h3 className="font-semibold text-slate-900 mb-6">Peak Attendance Hours</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-white mb-6">Peak Attendance Hours</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={peakHoursData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <defs>

@@ -97,16 +97,16 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* ── Navbar ── */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <nav className="bg-white border-b border-emerald-200 sticky top-0 z-40 dark:bg-slate-900 dark:border-slate-700">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
             <Logo className="w-9 h-9" />
-            <span className="text-lg font-bold text-slate-900">U-EventTrack</span>
+            <span className="text-lg font-bold text-slate-900 dark:text-white">U-EventTrack</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={openLogin} className="text-slate-600 hover:text-slate-900 px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            <button onClick={openLogin} className="text-slate-600 hover:text-slate-900 px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
               Sign In
             </button>
             <button onClick={openRegister} className="btn-primary text-sm">
@@ -117,16 +117,16 @@ export default function Landing() {
       </nav>
 
       {/* ── Hero ── */}
-      <section className="bg-slate-50 border-b border-slate-200">
+      <section className="bg-slate-50 border-b border-emerald-200 dark:bg-slate-800/50 dark:border-slate-700">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <div className="text-center max-w-3xl mx-auto">
             <Logo className="w-20 h-20 mx-auto mb-6" />
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight tracking-tight dark:text-white">
               Smart Event Attendance
               <br />
               <span className="text-emerald-600">Tracking System</span>
             </h1>
-            <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto">
+            <p className="mt-4 text-lg text-slate-500 max-w-2xl mx-auto dark:text-slate-400">
               Modernize university event management with facial recognition,
               RFID technology, GPS geofencing, and real-time analytics.
             </p>
@@ -148,9 +148,9 @@ export default function Landing() {
               { label: 'Attendance Logs', value: '45,000+' },
               { label: 'Accuracy Rate', value: '99.2%' },
             ].map((s) => (
-              <div key={s.label} className="text-center py-4 px-3 bg-white rounded-xl border border-slate-200">
-                <p className="text-2xl font-bold text-slate-900">{s.value}</p>
-                <p className="text-xs text-slate-500 mt-1">{s.label}</p>
+              <div key={s.label} className="text-center py-4 px-3 bg-white rounded-xl border border-emerald-200 dark:bg-slate-800 dark:border-slate-700">
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">{s.value}</p>
+                <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">{s.label}</p>
               </div>
             ))}
           </div>
@@ -161,17 +161,17 @@ export default function Landing() {
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Features</h2>
-            <p className="text-slate-500 mt-2">Everything you need for smart event management.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Features</h2>
+            <p className="text-slate-500 mt-2 dark:text-slate-400">Everything you need for smart event management.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f) => (
-              <div key={f.title} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+              <div key={f.title} className="bg-white rounded-xl border border-emerald-200 p-5 hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
                 <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center mb-4">
                   <f.icon className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-1">{f.title}</h3>
-                <p className="text-sm text-slate-500">{f.desc}</p>
+                <h3 className="font-semibold text-slate-900 mb-1 dark:text-white">{f.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -179,11 +179,11 @@ export default function Landing() {
       </section>
 
       {/* ── Roles ── */}
-      <section className="py-20 bg-slate-50 border-y border-slate-200">
+      <section className="py-20 bg-slate-50 border-y border-emerald-200 dark:bg-slate-800/50 dark:border-slate-700">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Built for Every Role</h2>
-            <p className="text-slate-500 mt-2">Three tailored experiences for your university.</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Built for Every Role</h2>
+            <p className="text-slate-500 mt-2 dark:text-slate-400">Three tailored experiences for your university.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -191,14 +191,14 @@ export default function Landing() {
               { role: 'Organizer', icon: Users, items: ['Create events', 'Check-in station', 'Live monitoring', 'Export reports'] },
               { role: 'Student', icon: ScanFace, items: ['Facial enrollment', 'Self-service check-in', 'RFID card linking', 'Attendance history'] },
             ].map((r) => (
-              <div key={r.role} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div key={r.role} className="bg-white rounded-xl border border-emerald-200 overflow-hidden dark:bg-slate-800 dark:border-slate-700">
                 <div className="bg-emerald-600 px-5 py-5 flex items-center gap-3">
                   <r.icon className="w-6 h-6 text-white/90" />
                   <h3 className="text-lg font-bold text-white">{r.role}</h3>
                 </div>
                 <ul className="p-5 space-y-2.5">
                   {r.items.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-slate-600">
+                    <li key={item} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                       {item}
                     </li>
@@ -243,17 +243,17 @@ export default function Landing() {
       {authModal === 'login' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md animate-scale-in">
+          <div className="relative bg-white rounded-2xl shadow-xl border border-emerald-200 w-full max-w-md animate-scale-in dark:bg-slate-800 dark:border-slate-700">
             {/* Header */}
             <div className="px-6 pt-6 pb-0 flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <Logo className="w-10 h-10" />
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Sign In</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Sign In</h3>
                   <p className="text-xs text-slate-400">U-EventTrack</p>
                 </div>
               </div>
-              <button onClick={closeModal} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+              <button onClick={closeModal} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors dark:hover:text-slate-300 dark:hover:bg-slate-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -261,13 +261,13 @@ export default function Landing() {
             {/* Form */}
             <form onSubmit={handleLogin} className="p-6 space-y-4">
               {(loginError || authError) && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {loginError || authError}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Email</label>
                 <input
                   type="email" required autoFocus
                   value={loginForm.email}
@@ -278,7 +278,7 @@ export default function Landing() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Password</label>
                 <div className="relative">
                   <input
                     type={loginShowPw ? 'text' : 'password'} required
@@ -302,9 +302,9 @@ export default function Landing() {
                 )}
               </button>
 
-              <p className="text-center text-sm text-slate-500">
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
                 No account?{' '}
-                <button type="button" onClick={switchToRegister} className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                <button type="button" onClick={switchToRegister} className="text-primary-600 hover:text-primary-700 font-semibold dark:text-primary-400 dark:hover:text-primary-300">
                   Create one
                 </button>
               </p>
@@ -317,17 +317,17 @@ export default function Landing() {
       {authModal === 'register' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md max-h-[90vh] overflow-y-auto animate-scale-in">
+          <div className="relative bg-white rounded-2xl shadow-xl border border-emerald-200 w-full max-w-md max-h-[90vh] overflow-y-auto animate-scale-in dark:bg-slate-800 dark:border-slate-700">
             {/* Header */}
-            <div className="px-6 pt-6 pb-0 flex items-start justify-between sticky top-0 bg-white z-10">
+            <div className="px-6 pt-6 pb-0 flex items-start justify-between sticky top-0 bg-white z-10 dark:bg-slate-800">
               <div className="flex items-center gap-3">
                 <Logo className="w-10 h-10" />
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Create Account</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Create Account</h3>
                   <p className="text-xs text-slate-400">U-EventTrack</p>
                 </div>
               </div>
-              <button onClick={closeModal} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+              <button onClick={closeModal} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors dark:hover:text-slate-300 dark:hover:bg-slate-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -335,21 +335,21 @@ export default function Landing() {
             {/* Form */}
             <form onSubmit={handleRegister} className="p-6 space-y-4">
               {(regError || authError) && (
-                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg p-3 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {regError || authError}
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Full Name</label>
                   <input type="text" required value={regForm.name}
                     onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
                     className="input-field" placeholder="Juan Dela Cruz" />
                   {fieldErr('name')}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Student ID</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Student ID</label>
                   <input type="text" required value={regForm.student_id}
                     onChange={(e) => setRegForm({ ...regForm, student_id: e.target.value })}
                     className="input-field" placeholder="2024-00001" />
@@ -358,7 +358,7 @@ export default function Landing() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">University Email</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">University Email</label>
                 <input type="email" required value={regForm.email}
                   onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
                   className="input-field" placeholder="you@university.edu" />
@@ -366,7 +366,7 @@ export default function Landing() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Password</label>
                 <div className="relative">
                   <input type={regShowPw ? 'text' : 'password'} required minLength={8}
                     value={regForm.password}
@@ -381,7 +381,7 @@ export default function Landing() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1 dark:text-slate-300">Confirm Password</label>
                 <input type={regShowPw ? 'text' : 'password'} required
                   value={regForm.password_confirmation}
                   onChange={(e) => setRegForm({ ...regForm, password_confirmation: e.target.value })}
@@ -396,9 +396,9 @@ export default function Landing() {
                 )}
               </button>
 
-              <p className="text-center text-sm text-slate-500">
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
                 Already have an account?{' '}
-                <button type="button" onClick={switchToLogin} className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                <button type="button" onClick={switchToLogin} className="text-primary-600 hover:text-primary-700 font-semibold dark:text-primary-400 dark:hover:text-primary-300">
                   Sign In
                 </button>
               </p>

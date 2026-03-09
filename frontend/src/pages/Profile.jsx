@@ -8,8 +8,8 @@ import {
 
 const enrollmentStatusMap = {
   enrolled: { label: 'Enrolled', icon: CheckCircle, color: 'text-emerald-600 bg-emerald-100' },
-  pending: { label: 'Pending', icon: Clock, color: 'text-emerald-600 bg-emerald-50' },
-  none: { label: 'Not Enrolled', icon: AlertCircle, color: 'text-slate-500 bg-slate-100' },
+  pending: { label: 'Pending', icon: Clock, color: 'text-amber-600 bg-amber-50' },
+  none: { label: 'Not Enrolled', icon: AlertCircle, color: 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800' },
 };
 
 export default function Profile() {
@@ -43,17 +43,17 @@ export default function Profile() {
               {getInitials(mockProfile.name)}
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-slate-900">{mockProfile.name}</h2>
-              <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{mockProfile.name}</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
                 <Mail className="w-4 h-4" />{mockProfile.email}
               </p>
               <div className="flex items-center gap-3 mt-2">
-                <span className="badge bg-emerald-100 text-emerald-800 capitalize">
+                <span className="badge bg-primary-100 text-primary-800 capitalize">
                   <Shield className="w-3 h-3 mr-1" />
                   {mockProfile.role === 'admin' ? 'USG Admin' : mockProfile.role === 'organizer' ? 'Event Organizer' : 'Student'}
                 </span>
                 {mockProfile.role === 'student' && (
-                  <span className="text-xs text-slate-500">{mockProfile.student_id}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{mockProfile.student_id}</span>
                 )}
               </div>
             </div>
@@ -63,36 +63,36 @@ export default function Profile() {
         {/* Info Grid */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <UserCircle className="w-4 h-4 text-emerald-600" />Account Information
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <UserCircle className="w-4 h-4 text-blue-600" />Account Information
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Department</span>
-                <span className="font-medium text-slate-900">{mockProfile.department}</span>
+                <span className="text-slate-500 dark:text-slate-400">Department</span>
+                <span className="font-medium text-slate-900 dark:text-white">{mockProfile.department}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Member Since</span>
-                <span className="font-medium text-slate-900">{new Date(mockProfile.joined).toLocaleDateString()}</span>
+                <span className="text-slate-500 dark:text-slate-400">Member Since</span>
+                <span className="font-medium text-slate-900 dark:text-white">{new Date(mockProfile.joined).toLocaleDateString()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Events Attended</span>
-                <span className="font-medium text-slate-900">{mockProfile.events_attended} / {mockProfile.total_events}</span>
+                <span className="text-slate-500 dark:text-slate-400">Events Attended</span>
+                <span className="font-medium text-slate-900 dark:text-white">{mockProfile.events_attended} / {mockProfile.total_events}</span>
               </div>
             </div>
           </div>
 
           <div className="card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-emerald-600" />RFID Information
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-orange-600" />RFID Information
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">RFID Tag</span>
-                <span className="font-mono font-medium text-slate-900">{mockProfile.rfid_tag || 'Not Assigned'}</span>
+                <span className="text-slate-500 dark:text-slate-400">RFID Tag</span>
+                <span className="font-mono font-medium text-slate-900 dark:text-white">{mockProfile.rfid_tag || 'Not Assigned'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Tag Status</span>
+                <span className="text-slate-500 dark:text-slate-400">Tag Status</span>
                 <span className={cn(
                   'badge capitalize',
                   mockProfile.rfid_status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
@@ -107,16 +107,16 @@ export default function Profile() {
         {/* Face Enrollment & Location */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <ScanFace className="w-4 h-4 text-emerald-600" />Facial Enrollment
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <ScanFace className="w-4 h-4 text-violet-600" />Facial Enrollment
             </h3>
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-emerald-200 dark:border-slate-700">
               <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', enrollment.color)}>
                 <enrollment.icon className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900">{enrollment.label}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">{enrollment.label}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {mockProfile.face_enrollment === 'enrolled'
                     ? '5 face descriptors captured'
                     : mockProfile.face_enrollment === 'pending'
@@ -128,10 +128,10 @@ export default function Profile() {
           </div>
 
           <div className="card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-600" />Location Tracking
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-rose-600" />Location Tracking
             </h3>
-            <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+            <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg border border-emerald-200 dark:border-slate-700">
               <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-100">
                 <MapPin className="w-5 h-5 text-emerald-600" />
               </div>

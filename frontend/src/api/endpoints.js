@@ -27,6 +27,10 @@ export const eventsAPI = {
   create: (data) => api.post('/api/events', data),
   update: (id, data) => api.put(`/api/events/${id}`, data),
   delete: (id) => api.delete(`/api/events/${id}`),
+  archive: (id) => api.patch(`/api/events/${id}/archive`),
+  restore: (id) => api.patch(`/api/events/${id}/restore`),
+  bulkArchive: (ids) => api.post('/api/events/bulk-archive', { ids }),
+  bulkRestore: (ids) => api.post('/api/events/bulk-restore', { ids }),
   getUpcoming: () => api.get('/api/events/upcoming'),
   getAttendance: (id) => api.get(`/api/events/${id}/attendance`),
 };

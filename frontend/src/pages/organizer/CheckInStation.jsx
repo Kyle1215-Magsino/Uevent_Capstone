@@ -1,13 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
 import toast from 'react-hot-toast';
-import { PageHeader, SearchInput, StatsCard, Modal } from '../../components/ui';
 import { cn, getInitials } from '../../lib/utils';
-import { eventsAPI, attendanceAPI, enrollmentAPI } from '../../api/endpoints';
+import { attendanceAPI, enrollmentAPI } from '../../api/endpoints';
+import { Modal } from '../../components/ui';
 import {
-  ScanFace, CreditCard, ClipboardList, MapPin, CheckCircle2,
-  Video, VideoOff, Loader2, AlertTriangle, Radio, Users,
-  ClipboardCheck, Gauge, XCircle, Wifi, Navigation,
+  ScanFace, CreditCard, ClipboardList, CheckCircle2,
+  Loader2, XCircle,
 } from 'lucide-react';
 
 /* ── Constants ─────────────────────────────────────────────── */
@@ -41,10 +40,7 @@ function determineAttendanceStatus(event) {
   return now > lateThreshold ? 'late' : 'present';
 }
 
-export default function CheckInStation() {
-  const [events, setEvents] = useState([]);
-  const [eventsLoading, setEventsLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+export default function CheckInStation({ open, onClose, event }) {
   const [checkInMethod, setCheckInMethod] = useState('rfid');
   const [rfidInput, setRfidInput] = useState('');
   const [manualInput, setManualInput] = useState('');
@@ -73,24 +69,25 @@ export default function CheckInStation() {
   const [, setDeviceLocation] = useState(null);
   const [locationDistance, setLocationDistance] = useState(null);
 
-  /* ── Load events from API ────────────────────────────────── */
+  /* Reset state when modal opens/closes or event changes */
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await eventsAPI.getAll();
-        const list = res.data?.data || res.data || [];
-        setEvents(Array.isArray(list) ? list : []);
-      } catch {
-        toast.error('Failed to load events.');
-      } finally {
-        setEventsLoading(false);
-      }
-    })();
-  }, []);
+    if (!open) {
+      // Clean up on close
+      setCheckInMethod('rfid');
+      setRfidInput('');
+      setManualInput('');
+      setRecentCheckins([]);
+      setProcessingStatus('idle');
+      setProcessMessage('');
+      setFaceResult(null);
+      setFaceMatcher(null);
+      setEnrolledMap({});
+    }
+  }, [open]);
 
   /* ── Load enrolled faces for face matching ───────────────── */
   useEffect(() => {
-    if (!selectedEvent) return;
+    if (!open || !event) return;
     (async () => {
       setFacesLoading(true);
       try {
@@ -137,7 +134,7 @@ export default function CheckInStation() {
         setFacesLoading(false);
       }
     })();
-  }, [selectedEvent]);
+  }, [open, event]);
 
   /* ── Geolocation ─────────────────────────────────────────── */
   useEffect(() => {
@@ -202,14 +199,14 @@ export default function CheckInStation() {
 
   /* Auto-start camera when switching to face method */
   useEffect(() => {
-    if (checkInMethod === 'face' && selectedEvent) {
+    if (checkInMethod === 'face' && open && event) {
       startCamera();
     } else {
       stopCamera();
     }
     return () => stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkInMethod, selectedEvent]);
+  }, [checkInMethod, open, event]);
 
   /* Attach stream to video element once it renders (fixes race condition) */
   useEffect(() => {
@@ -288,7 +285,7 @@ export default function CheckInStation() {
           if (studentInfo) {
             // Record attendance via API
             try {
-              const res = await attendanceAPI.faceCheckIn(selectedEvent.id, { user_id: studentInfo.user_id });
+              const res = await attendanceAPI.faceCheckIn(event.id, { user_id: studentInfo.user_id });
               const attendanceStatus = res.data?.status || 'present';
               addCheckIn(studentInfo.name, studentInfo.student_id, 'face', confidence, attendanceStatus);
               toast.success(`${studentInfo.name} checked in via Face Recognition (${confidence}% match) — ${attendanceStatus.toUpperCase()}`);
@@ -314,19 +311,19 @@ export default function CheckInStation() {
         toast.error('Face not recognized. Student may not be enrolled.');
       }
     }, 500);
-  }, [modelsLoaded, faceMatcher, enrolledMap, drawOverlay, selectedEvent]);
+  }, [modelsLoaded, faceMatcher, enrolledMap, drawOverlay, event]);
 
   /* ── RFID scan handler ───────────────────────────────────── */
   const handleRFIDScan = async (e) => {
     e.preventDefault();
     const input = rfidInput.trim();
-    if (!input || !selectedEvent) return;
+    if (!input || !event) return;
 
     setProcessingStatus('processing');
     setProcessMessage('Reading RFID tag...');
 
     try {
-      const res = await attendanceAPI.rfidCheckIn(selectedEvent.id, { student_id: input });
+      const res = await attendanceAPI.rfidCheckIn(event.id, { student_id: input });
       const user = res.data?.user;
       const attendanceStatus = res.data?.status || 'present';
       const name = user?.name || 'Student';
@@ -357,14 +354,14 @@ export default function CheckInStation() {
   const handleManualCheckIn = async (e) => {
     e.preventDefault();
     const input = manualInput.trim();
-    if (!input || !selectedEvent) return;
+    if (!input || !event) return;
 
     setProcessingStatus('processing');
     setProcessMessage('Looking up student...');
 
     try {
       // Try RFID check-in with the student_id input
-      const res = await attendanceAPI.rfidCheckIn(selectedEvent.id, { student_id: input });
+      const res = await attendanceAPI.rfidCheckIn(event.id, { student_id: input });
       const user = res.data?.user;
       const attendanceStatus = res.data?.status || 'present';
       const name = user?.name || 'Student';
@@ -393,7 +390,7 @@ export default function CheckInStation() {
 
   /* ── Add check-in record ─────────────────────────────────── */
   const addCheckIn = (name, studentId, method, score, attendanceStatus) => {
-    const status = attendanceStatus || determineAttendanceStatus(selectedEvent);
+    const status = attendanceStatus || determineAttendanceStatus(event);
     setRecentCheckins((prev) => [
       {
         id: Date.now(),
@@ -410,368 +407,209 @@ export default function CheckInStation() {
   };
 
   const methodIcon = { face: ScanFace, rfid: CreditCard, manual: ClipboardList };
-  const methodLabel = { face: 'Face Recognition', rfid: 'RFID', manual: 'Manual' };
+
+  if (!open) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <PageHeader
-        title="Check-In Station"
-        description="Process student attendance using RFID, facial recognition, or manual entry."
-        actions={
-          selectedEvent && (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsLive(!isLive)}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                  isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
-                )}
-              >
-                <Radio className={cn('w-4 h-4', isLive && 'animate-pulse')} />
-                {isLive ? 'Station Active' : 'Paused'}
-              </button>
-            </div>
-          )
-        }
-      />
-
-      {/* Location Status Banner */}
-      <div className={cn(
-        'border rounded-xl p-4 flex items-center gap-3',
-        locationStatus === 'inside' ? 'bg-emerald-50 border-emerald-200' :
-        locationStatus === 'outside' ? 'bg-emerald-50/50 border-emerald-200' :
-        'bg-slate-50 border-slate-200'
-      )}>
-        <div className={cn(
-          'w-10 h-10 rounded-lg flex items-center justify-center',
-          locationStatus === 'inside' ? 'bg-emerald-100' :
-          locationStatus === 'outside' ? 'bg-emerald-100' : 'bg-slate-100'
-        )}>
-          <Navigation className={cn(
-            'w-5 h-5',
-            locationStatus === 'inside' ? 'text-emerald-600' :
-            locationStatus === 'outside' ? 'text-emerald-500' : 'text-slate-500'
-          )} />
+    <Modal open={open} onClose={onClose} title={`Check-In — ${event?.title || 'Event'}`} size="md">
+      <div className="space-y-0 -m-6">
+        {/* Event info bar */}
+        <div className="px-5 py-3 bg-slate-50 dark:bg-slate-800/50 border-b border-emerald-200 dark:border-slate-700 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">{event?.title}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{event?.venue} · {event?.status}</p>
+          </div>
+          <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            {recentCheckins.length}/{event?.capacity || 0}
+          </span>
         </div>
-        <div className="flex-1">
-          <p className={cn(
-            'text-sm font-medium',
-            locationStatus === 'inside' ? 'text-emerald-800' :
-            locationStatus === 'outside' ? 'text-emerald-700' : 'text-slate-700'
-          )}>
-            {locationStatus === 'inside' ? 'Within Campus Geofence' :
-             locationStatus === 'outside' ? 'Outside Campus Boundary' :
-             locationStatus === 'denied' ? 'Location Access Denied' :
-             locationStatus === 'unsupported' ? 'Geolocation Not Supported' : 'Detecting Location...'}
-          </p>
-          <p className="text-xs text-slate-500">
-            {locationDistance !== null
-              ? `${locationDistance}m from campus center · Geofence: ${GEOFENCE_RADIUS_METERS}m radius`
-              : 'Enable location services for geofence verification'}
-          </p>
-        </div>
-        <div className={cn(
-          'w-3 h-3 rounded-full',
-          locationStatus === 'inside' ? 'bg-emerald-500 animate-pulse' :
-          locationStatus === 'outside' ? 'bg-emerald-400' : 'bg-slate-400'
-        )} />
-      </div>
 
-      {/* Event Selection */}
-      {!selectedEvent ? (
-        <>
-          <h3 className="text-lg font-semibold text-slate-900">Select Event</h3>
-          {eventsLoading ? (
-            <div className="text-center py-8">
-              <Loader2 className="w-6 h-6 text-emerald-500 animate-spin mx-auto mb-2" />
-              <p className="text-sm text-slate-500">Loading events...</p>
-            </div>
-          ) : events.length === 0 ? (
-            <div className="text-center py-8">
-              <AlertTriangle className="w-6 h-6 text-slate-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-500">No events found.</p>
-            </div>
-          ) : (
-          <div className="grid md:grid-cols-3 gap-4">
-            {events.filter((e) => e.status === 'ongoing' || e.status === 'upcoming').map((event) => (
-              <button
-                key={event.id}
-                onClick={() => setSelectedEvent(event)}
-                className="card-hover p-5 text-left"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className={cn(
-                    'badge capitalize text-xs',
-                    event.status === 'ongoing' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                  )}>
-                    {event.status}
-                  </span>
-                  <Users className="w-4 h-4 text-slate-400" />
-                </div>
-                <h4 className="text-sm font-semibold text-slate-900 mb-1">{event.title}</h4>
-                <p className="text-xs text-slate-500 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />{event.venue}
-                </p>
-              </button>
-            ))}
-          </div>
-          )}
-        </>
-      ) : (
-        <>
-          {/* Active Event Header */}
-          <div className="card p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Wifi className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">{selectedEvent.title}</h3>
-                <p className="text-xs text-slate-500">{selectedEvent.venue} · Capacity: {selectedEvent.capacity}</p>
-              </div>
-            </div>
-            <button onClick={() => { setSelectedEvent(null); stopCamera(); }} className="btn-secondary text-sm">
-              Change Event
-            </button>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatsCard title="Total Check-ins" value={recentCheckins.length} icon={ClipboardCheck} iconColor="primary" />
-            <StatsCard title="Capacity" value={selectedEvent.capacity} icon={Users} iconColor="emerald" />
-            <StatsCard title="Fill Rate" value={`${((recentCheckins.length / selectedEvent.capacity) * 100).toFixed(1)}%`} icon={Gauge} iconColor="emerald" />
-            <StatsCard title="Location" value={locationStatus === 'inside' ? 'On Campus' : 'Off Campus'} icon={MapPin} iconColor="emerald" />
-          </div>
-
-          {/* Check-in Method Tabs */}
-          <div className="card overflow-hidden">
-            <div className="border-b border-slate-200 flex">
-              {[
-                { key: 'rfid', icon: CreditCard, label: 'RFID Scanner' },
-                { key: 'face', icon: ScanFace, label: 'Face Recognition' },
-                { key: 'manual', icon: ClipboardList, label: 'Manual Entry' },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setCheckInMethod(tab.key)}
-                  className={cn(
-                    'flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
-                    checkInMethod === tab.key
-                      ? 'border-primary-500 text-primary-700 bg-primary-50/40'
-                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                  )}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-6">
-              {/* ── RFID Tab ── */}
-              {checkInMethod === 'rfid' && (
-                <div className="space-y-5">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                      <CreditCard className="w-8 h-8 text-emerald-600" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-slate-900">Scan RFID Tag</h4>
-                    <p className="text-sm text-slate-500 mt-1">Place the student's ID card on the RFID reader or type the tag number</p>
-                  </div>
-                  <form onSubmit={handleRFIDScan} className="max-w-md mx-auto">
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input
-                        type="text"
-                        value={rfidInput}
-                        onChange={(e) => setRfidInput(e.target.value)}
-                        className="input-field pl-11 text-center text-lg font-mono tracking-wider"
-                        placeholder="RFID-XXX-XXXX or Student ID"
-                        autoFocus
-                      />
-                    </div>
-                    <button type="submit" className="btn-primary w-full mt-3">
-                      Process Scan
-                    </button>
-                  </form>
-
-                  {/* Processing feedback */}
-                  {processingStatus !== 'idle' && (
-                    <div className={cn(
-                      'max-w-md mx-auto p-4 rounded-xl border text-center',
-                      processingStatus === 'processing' ? 'bg-slate-50 border-slate-200' :
-                      processingStatus === 'success' ? 'bg-emerald-50 border-emerald-200' :
-                      'bg-emerald-50/50 border-emerald-200'
-                    )}>
-                      {processingStatus === 'processing' && <Loader2 className="w-6 h-6 text-emerald-500 animate-spin mx-auto mb-2" />}
-                      {processingStatus === 'success' && <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto mb-2" />}
-                      {processingStatus === 'error' && <XCircle className="w-6 h-6 text-emerald-500 mx-auto mb-2" />}
-                      <p className={cn(
-                        'text-sm font-medium',
-                        processingStatus === 'success' ? 'text-emerald-800' :
-                        processingStatus === 'error' ? 'text-emerald-700' : 'text-slate-700'
-                      )}>
-                        {processMessage}
-                      </p>
-                    </div>
-                  )}
-                </div>
+        {/* Method Tabs */}
+        <div className="border-b border-emerald-200 dark:border-slate-700 flex">
+          {[
+            { key: 'rfid', icon: CreditCard, label: 'RFID' },
+            { key: 'face', icon: ScanFace, label: 'Face' },
+            { key: 'manual', icon: ClipboardList, label: 'Manual' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setCheckInMethod(tab.key)}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+                checkInMethod === tab.key
+                  ? 'border-emerald-800 text-primary-700 bg-primary-50/40'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700'
               )}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-              {/* ── Face Recognition Tab ── */}
-              {checkInMethod === 'face' && (
-                <div className="space-y-5">
-                  <div className="relative bg-slate-900 rounded-xl overflow-hidden max-w-lg mx-auto" style={{ aspectRatio: '4/3' }}>
-                    {cameraActive ? (
-                      <>
-                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} />
-                        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
-                        {faceDetecting && (
-                          <div className="absolute top-3 inset-x-3 flex items-center justify-center">
-                            <span className="text-xs font-medium px-3 py-1 rounded-full bg-emerald-500/80 text-white backdrop-blur-sm flex items-center gap-1.5">
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              Scanning face...
-                            </span>
-                          </div>
-                        )}
-                        {faceResult && (
-                          <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
-                            {faceResult.success ? (
-                              <>
-                                <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-                                <p className="text-white font-semibold">{faceResult.student?.name}</p>
-                                {faceResult.student?.student_id && (
-                                  <p className="text-white/60 text-xs">{faceResult.student.student_id}</p>
-                                )}
-                                <p className="text-white/70 text-sm">Match: {faceResult.score}%</p>
-                              </>
-                            ) : (
-                              <>
-                                <XCircle className="w-12 h-12 text-slate-400" />
-                                <p className="text-white font-semibold">No match found</p>
-                                <p className="text-white/60 text-xs">Student may not be enrolled</p>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                        <Loader2 className="w-8 h-8 text-slate-500 animate-spin" />
-                        <p className="text-slate-400 text-sm">Starting camera...</p>
+        {/* Tab Content */}
+        <div className="p-5">
+          {/* RFID */}
+          {checkInMethod === 'rfid' && (
+            <form onSubmit={handleRFIDScan} className="space-y-3">
+              <div className="relative">
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  value={rfidInput}
+                  onChange={(e) => setRfidInput(e.target.value)}
+                  className="input-field pl-11 text-center font-mono tracking-wider"
+                  placeholder="Scan or type RFID / Student ID"
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn-primary w-full">Process Scan</button>
+            </form>
+          )}
+
+          {/* Face Recognition */}
+          {checkInMethod === 'face' && (
+            <div className="space-y-3">
+              <div className="relative bg-slate-900 rounded-lg overflow-hidden" style={{ aspectRatio: '4/3' }}>
+                {cameraActive ? (
+                  <>
+                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} />
+                    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+                    {faceDetecting && (
+                      <div className="absolute top-2 inset-x-2 flex justify-center">
+                        <span className="text-xs font-medium px-3 py-1 rounded-full bg-primary-500/80 text-white backdrop-blur-sm flex items-center gap-1.5">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Scanning…
+                        </span>
                       </div>
-                    )}
-                  </div>
-                  <div className="flex justify-center gap-3">
-                    {!faceDetecting && !faceResult && (
-                      <button onClick={runFaceCheckIn} disabled={!cameraActive || !modelsLoaded || facesLoading || !faceMatcher} className="btn-primary text-sm flex items-center gap-2">
-                        {facesLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanFace className="w-4 h-4" />}
-                        {facesLoading ? 'Loading enrolled faces...' : !faceMatcher ? 'No enrolled faces' : 'Start Face Check-In'}
-                      </button>
                     )}
                     {faceResult && (
-                      <button onClick={() => { setFaceResult(null); }} className="btn-secondary text-sm">
-                        Scan Next Student
-                      </button>
+                      <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-1.5">
+                        {faceResult.success ? (
+                          <>
+                            <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                            <p className="text-white font-semibold text-sm">{faceResult.student?.name}</p>
+                            <p className="text-white/60 text-xs">{faceResult.student?.student_id}</p>
+                            <p className="text-white/70 text-xs">Match: {faceResult.score}%</p>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-10 h-10 text-red-400" />
+                            <p className="text-white font-semibold text-sm">No match found</p>
+                          </>
+                        )}
+                      </div>
                     )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-2 p-6">
+                    <Loader2 className="w-6 h-6 text-slate-500 dark:text-slate-400 animate-spin" />
+                    <p className="text-slate-400 text-xs">Starting camera…</p>
                   </div>
-                </div>
-              )}
-
-              {/* ── Manual Tab ── */}
-              {checkInMethod === 'manual' && (
-                <div className="space-y-5">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                      <ClipboardList className="w-8 h-8 text-slate-600" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-slate-900">Manual Check-In</h4>
-                    <p className="text-sm text-slate-500 mt-1">Enter the student's ID number or name</p>
-                  </div>
-                  <form onSubmit={handleManualCheckIn} className="max-w-md mx-auto">
-                    <input
-                      type="text"
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
-                      className="input-field text-center"
-                      placeholder="Student ID or Name"
-                    />
-                    <button type="submit" className="btn-primary w-full mt-3">
-                      Check In Student
-                    </button>
-                  </form>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Check-ins Feed */}
-          <div className="card">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h3 className="font-semibold text-slate-900">Recent Check-ins</h3>
-                {isLive && (
-                  <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />Real-time
-                  </span>
                 )}
               </div>
-              <span className="text-sm text-slate-500">{recentCheckins.length} total</span>
+              <div className="flex justify-center gap-2">
+                {!faceDetecting && !faceResult && (
+                  <button onClick={runFaceCheckIn} disabled={!cameraActive || !modelsLoaded || facesLoading || !faceMatcher} className="btn-primary text-sm w-full flex items-center justify-center gap-2">
+                    {facesLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanFace className="w-4 h-4" />}
+                    {facesLoading ? 'Loading faces…' : !faceMatcher ? 'No enrolled faces' : 'Start Face Scan'}
+                  </button>
+                )}
+                {faceResult && (
+                  <button onClick={() => setFaceResult(null)} className="btn-secondary text-sm w-full">Scan Next Student</button>
+                )}
+              </div>
             </div>
-            {recentCheckins.length > 0 ? (
-              <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
-                {recentCheckins.map((checkin, i) => {
-                  const MethodIcon = methodIcon[checkin.method];
-                  return (
-                    <div key={checkin.id} className={cn(
-                      'px-6 py-3 flex items-center justify-between hover:bg-primary-50/30 transition-colors',
-                      i === 0 && 'bg-emerald-50'
-                    )}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
-                          {getInitials(checkin.name)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{checkin.name}</p>
-                          <p className="text-xs text-slate-500">{checkin.student_id}</p>
-                        </div>
+          )}
+
+          {/* Manual */}
+          {checkInMethod === 'manual' && (
+            <form onSubmit={handleManualCheckIn} className="space-y-3">
+              <input
+                type="text"
+                value={manualInput}
+                onChange={(e) => setManualInput(e.target.value)}
+                className="input-field text-center"
+                placeholder="Student ID or Name"
+              />
+              <button type="submit" className="btn-primary w-full">Check In</button>
+            </form>
+          )}
+
+          {/* Processing Feedback */}
+          {processingStatus !== 'idle' && (
+            <div className={cn(
+              'mt-3 p-3 rounded-lg border text-center flex items-center justify-center gap-2',
+              processingStatus === 'processing' ? 'bg-slate-50 dark:bg-slate-800/50 border-emerald-200 dark:border-slate-700' :
+              processingStatus === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-slate-700' :
+              'bg-red-50 dark:bg-red-900/20 border-red-200'
+            )}>
+              {processingStatus === 'processing' && <Loader2 className="w-4 h-4 text-primary-500 animate-spin" />}
+              {processingStatus === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+              {processingStatus === 'error' && <XCircle className="w-4 h-4 text-red-500" />}
+              <p className={cn(
+                'text-sm font-medium',
+                processingStatus === 'success' ? 'text-emerald-700' :
+                processingStatus === 'error' ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300'
+              )}>
+                {processMessage}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Check-ins */}
+        <div className="border-t border-emerald-200 dark:border-slate-700">
+          <div className="px-5 py-3 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Recent</span>
+            <span className="text-xs text-slate-400">{recentCheckins.length} checked in</span>
+          </div>
+          {recentCheckins.length > 0 ? (
+            <div className="divide-y divide-emerald-100 max-h-[240px] overflow-y-auto">
+              {recentCheckins.slice(0, 20).map((checkin, i) => {
+                const MethodIcon = methodIcon[checkin.method];
+                return (
+                  <div key={checkin.id} className={cn(
+                    'px-5 py-2.5 flex items-center justify-between',
+                    i === 0 && 'bg-primary-50/50'
+                  )}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-semibold">
+                        {getInitials(checkin.name)}
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5">
-                          <MethodIcon className="w-4 h-4 text-emerald-600" />
-                          <span className="text-xs text-slate-500">{methodLabel[checkin.method]}</span>
-                        </div>
-                        <span className={cn(
-                          'text-xs font-semibold px-2 py-0.5 rounded-full capitalize',
-                          checkin.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
-                          checkin.status === 'late' ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        )}>
-                          {checkin.status}
-                        </span>
-                        {checkin.location === 'inside' && (
-                          <span className="text-xs text-emerald-600 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />On Campus
-                          </span>
-                        )}
-                        <span className="text-xs text-slate-400">
-                          {new Date(checkin.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </span>
-                        <CheckCircle2 className={cn('w-5 h-5', checkin.status === 'present' ? 'text-emerald-500' : 'text-amber-500')} />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white leading-tight">{checkin.name}</p>
+                        <p className="text-[11px] text-slate-400">{checkin.student_id}</p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-12 text-center">
-                <ClipboardCheck className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-500">No check-ins yet. Start scanning to begin.</p>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+                    <div className="flex items-center gap-2.5">
+                      <MethodIcon className={cn(
+                        'w-3.5 h-3.5',
+                        checkin.method === 'face' ? 'text-violet-500' :
+                        checkin.method === 'rfid' ? 'text-orange-500' : 'text-slate-400'
+                      )} />
+                      <span className={cn(
+                        'text-[11px] font-semibold px-1.5 py-0.5 rounded-full capitalize',
+                        checkin.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
+                        checkin.status === 'late' ? 'bg-amber-100 text-amber-700' :
+                        'bg-red-100 text-red-700'
+                      )}>
+                        {checkin.status}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(checkin.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-8 text-center">
+              <p className="text-xs text-slate-400">No check-ins yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 }

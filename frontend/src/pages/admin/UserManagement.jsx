@@ -64,8 +64,8 @@ export default function UserManagement() {
             {getInitials(row.name)}
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-900">{row.name}</p>
-            <p className="text-xs text-slate-500">{row.email}</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{row.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
           </div>
         </div>
       ),
@@ -91,7 +91,7 @@ export default function UserManagement() {
         val ? (
           <span className="badge-success">Enrolled</span>
         ) : (
-          <span className="badge bg-slate-100 text-slate-500">Not Enrolled</span>
+          <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Not Enrolled</span>
         ),
     },
     {
@@ -111,17 +111,17 @@ export default function UserManagement() {
             <MoreVertical className="w-4 h-4" />
           </button>
           {activeDropdown === row.id && (
-            <div className="absolute right-0 mt-1 w-48 bg-white border border-slate-100 rounded-xl shadow-lg py-1 z-10">
+            <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-emerald-100 dark:border-slate-700 rounded-xl shadow-lg py-1 z-10">
               <button
                 onClick={() => openEdit(row)}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-primary-50/30"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-primary-50/30"
               >
                 <Edit className="w-4 h-4" />
                 Edit User
               </button>
               <button
                 onClick={() => openRoleChange(row)}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 hover:bg-primary-50/30"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-primary-50/30"
               >
                 <Shield className="w-4 h-4" />
                 Change Role
@@ -131,7 +131,7 @@ export default function UserManagement() {
                   setDeleteConfirm(row);
                   setActiveDropdown(null);
                 }}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50"
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary-600 hover:bg-primary-50"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete User
@@ -171,7 +171,7 @@ export default function UserManagement() {
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize',
                   roleFilter === role
                     ? 'bg-primary-100 text-primary-700'
-                    : 'text-slate-600 hover:bg-primary-50/30'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-primary-50/30'
                 )}
               >
                 {role === 'all' ? 'All Roles' : role}
@@ -183,8 +183,8 @@ export default function UserManagement() {
 
       {/* Table */}
       <div className="card">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <p className="text-sm text-slate-500">{filteredUsers.length} users found</p>
+        <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between">
+          <p className="text-sm text-slate-500 dark:text-slate-400">{filteredUsers.length} users found</p>
         </div>
         <DataTable columns={columns} data={filteredUsers} emptyMessage="No users found." />
       </div>
@@ -206,19 +206,19 @@ export default function UserManagement() {
       <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add New User">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setShowAddModal(false); }}>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
             <input className="input-field" placeholder="Enter full name" value={form.name} onChange={(e) => handleChange('name', e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
             <input type="email" className="input-field" placeholder="user@university.edu" value={form.email} onChange={(e) => handleChange('email', e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Student ID (optional)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Student ID (optional)</label>
             <input className="input-field" placeholder="2024-00001" value={form.student_id} onChange={(e) => handleChange('student_id', e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
             <select className="input-field" value={form.role} onChange={(e) => handleChange('role', e.target.value)}>
               <option value="student">Student</option>
               <option value="organizer">Event Organizer</option>
@@ -226,7 +226,7 @@ export default function UserManagement() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Temporary Password</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Temporary Password</label>
             <input type="password" className="input-field" placeholder="Minimum 8 characters" value={form.password} onChange={(e) => handleChange('password', e.target.value)} required />
           </div>
           <div className="flex justify-end gap-3 pt-2">
@@ -240,19 +240,19 @@ export default function UserManagement() {
       <Modal open={!!editUser} onClose={() => setEditUser(null)} title="Edit User">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setEditUser(null); }}>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
             <input className="input-field" value={form.name} onChange={(e) => handleChange('name', e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
             <input type="email" className="input-field" value={form.email} onChange={(e) => handleChange('email', e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Student ID (optional)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Student ID (optional)</label>
             <input className="input-field" value={form.student_id} onChange={(e) => handleChange('student_id', e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
             <select className="input-field" value={form.role} onChange={(e) => handleChange('role', e.target.value)}>
               <option value="student">Student</option>
               <option value="organizer">Event Organizer</option>
@@ -260,7 +260,7 @@ export default function UserManagement() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">New Password (leave blank to keep)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password (leave blank to keep)</label>
             <input type="password" className="input-field" placeholder="Leave blank to keep current" value={form.password} onChange={(e) => handleChange('password', e.target.value)} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
@@ -273,9 +273,9 @@ export default function UserManagement() {
       {/* Change Role Modal */}
       <Modal open={!!roleChangeUser} onClose={() => setRoleChangeUser(null)} title="Change User Role" size="sm">
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setRoleChangeUser(null); }}>
-          <p className="text-sm text-slate-500">Change role for <strong>{roleChangeUser?.name}</strong></p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Change role for <strong>{roleChangeUser?.name}</strong></p>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
             <select className="input-field" value={form.role} onChange={(e) => handleChange('role', e.target.value)}>
               <option value="student">Student</option>
               <option value="organizer">Event Organizer</option>

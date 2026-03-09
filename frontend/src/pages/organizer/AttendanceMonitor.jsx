@@ -46,9 +46,9 @@ export default function AttendanceMonitor() {
   ];
 
   const methodIcons = {
-    face: <ScanFace className="w-4 h-4 text-emerald-600" />,
-    rfid: <CreditCard className="w-4 h-4 text-emerald-600" />,
-    manual: <ClipboardList className="w-4 h-4 text-slate-600" />,
+    face: <ScanFace className="w-4 h-4 text-violet-600" />,
+    rfid: <CreditCard className="w-4 h-4 text-orange-600" />,
+    manual: <ClipboardList className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
   };
 
   return (
@@ -66,15 +66,15 @@ export default function AttendanceMonitor() {
             onClick={() => setSelectedEvent(event)}
             className={cn(
               'card p-4 text-left transition-all',
-              selectedEvent?.id === event.id ? 'ring-2 ring-primary-500 border-primary-200' : 'hover:shadow-md'
+              selectedEvent?.id === event.id ? 'ring-2 ring-emerald-400 border-emerald-300' : 'hover:shadow-md'
             )}
           >
             <div className="flex items-center justify-between mb-2">
               <StatusBadge status={event.status} />
               <span className="text-xs text-slate-400">{event.attendees}/{event.capacity}</span>
             </div>
-            <h4 className="text-sm font-semibold text-slate-900 line-clamp-1">{event.title}</h4>
-            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">{event.title}</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {formatDateTime(event.date)}
             </p>
@@ -85,10 +85,10 @@ export default function AttendanceMonitor() {
       {/* Attendance List */}
       {selectedEvent ? (
         <div className="card">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+          <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h3 className="font-semibold text-slate-900">{selectedEvent.title}</h3>
-              <p className="text-sm text-slate-500">{selectedEvent.attendees} attendees recorded</p>
+              <h3 className="font-semibold text-slate-900 dark:text-white">{selectedEvent.title}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{selectedEvent.attendees} attendees recorded</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-64">
@@ -102,7 +102,7 @@ export default function AttendanceMonitor() {
             </div>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-emerald-100">
             {mockAttendees.map((attendee) => (
               <div key={attendee.id} className="px-6 py-3 flex items-center justify-between hover:bg-primary-50/30">
                 <div className="flex items-center gap-3">
@@ -110,14 +110,14 @@ export default function AttendanceMonitor() {
                     {getInitials(attendee.name)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{attendee.name}</p>
-                    <p className="text-xs text-slate-500">{attendee.student_id}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{attendee.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{attendee.student_id}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
                     {methodIcons[attendee.method]}
-                    <span className="text-xs text-slate-500 capitalize">{attendee.method}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{attendee.method}</span>
                   </div>
                   <span className="text-xs text-slate-400">
                     {new Date(attendee.time).toLocaleTimeString()}
@@ -131,8 +131,8 @@ export default function AttendanceMonitor() {
       ) : (
         <div className="card p-12 text-center">
           <ClipboardCheck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900">Select an Event</h3>
-          <p className="text-sm text-slate-500 mt-1">Choose an event above to view its attendance records.</p>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Select an Event</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Choose an event above to view its attendance records.</p>
         </div>
       )}
     </div>

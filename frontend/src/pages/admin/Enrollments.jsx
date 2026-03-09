@@ -220,14 +220,14 @@ export default function Enrollments() {
   /* ── Quality color helper ──────────────────────────────────────── */
   const qualityColor = (q) => {
     if (q >= 90) return 'text-emerald-600';
-    if (q >= 70) return 'text-emerald-500';
-    return 'text-emerald-400';
+    if (q >= 70) return 'text-amber-500';
+    return 'text-red-500';
   };
 
   const qualityBg = (q) => {
     if (q >= 90) return 'bg-emerald-500';
-    if (q >= 70) return 'bg-emerald-400';
-    return 'bg-emerald-300';
+    if (q >= 70) return 'bg-amber-400';
+    return 'bg-red-400';
   };
 
   /* ── Table Columns ─────────────────────────────────────────────── */
@@ -241,8 +241,8 @@ export default function Enrollments() {
             {getInitials(row.name)}
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-900">{row.name}</p>
-            <p className="text-xs text-slate-500">{row.email}</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{row.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
           </div>
         </div>
       ),
@@ -260,11 +260,11 @@ export default function Enrollments() {
             {Array.from({ length: DESCRIPTOR_GOAL }).map((_, i) => (
               <div
                 key={i}
-                className={cn('w-4 h-1.5 rounded-full', i < val ? 'bg-emerald-500' : 'bg-slate-200')}
+                className={cn('w-4 h-1.5 rounded-full', i < val ? 'bg-primary-500' : 'bg-slate-200')}
               />
             ))}
           </div>
-          <span className="text-xs text-slate-500">{val}/{DESCRIPTOR_GOAL}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{val}/{DESCRIPTOR_GOAL}</span>
         </div>
       ),
     },
@@ -273,7 +273,7 @@ export default function Enrollments() {
       label: 'Quality',
       render: (val) => (
         <div className="flex items-center gap-2">
-          <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <div className={cn('h-full rounded-full', qualityBg(val))} style={{ width: `${val}%` }} />
           </div>
           <span className={cn('text-xs font-semibold', qualityColor(val))}>{val}%</span>
@@ -283,7 +283,7 @@ export default function Enrollments() {
     {
       key: 'submitted',
       label: 'Submitted',
-      render: (val) => <span className="text-sm text-slate-500">{formatDateTime(val)}</span>,
+      render: (val) => <span className="text-sm text-slate-500 dark:text-slate-400">{formatDateTime(val)}</span>,
     },
     {
       key: 'status',
@@ -295,8 +295,8 @@ export default function Enrollments() {
             val === 'approved'
               ? 'bg-emerald-100 text-emerald-800'
               : val === 'rejected'
-              ? 'bg-slate-100 text-slate-600'
-              : 'bg-emerald-50 text-emerald-700'
+              ? 'bg-red-100 text-red-700'
+              : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700'
           )}
         >
           {val}
@@ -317,7 +317,7 @@ export default function Enrollments() {
           </button>
           <button
             onClick={() => openVerify(row)}
-            className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
             title="Test Face Verification"
           >
             <Video className="w-4 h-4" />
@@ -333,7 +333,7 @@ export default function Enrollments() {
               </button>
               <button
                 onClick={() => { setRejectTarget(row); setRejectReason(''); }}
-                className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 title="Reject"
               >
                 <X className="w-4 h-4" />
@@ -354,15 +354,15 @@ export default function Enrollments() {
 
       {/* Pending Banner */}
       {pendingCount > 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-            <ScanFace className="w-5 h-5 text-emerald-600" />
+        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+            <ScanFace className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <p className="text-sm font-medium text-emerald-800">
+            <p className="text-sm font-medium text-amber-800">
               {pendingCount} enrollment{pendingCount !== 1 ? 's' : ''} pending review
             </p>
-            <p className="text-xs text-emerald-600">These students are waiting for their facial data to be approved.</p>
+            <p className="text-xs text-amber-600">These students are waiting for their facial data to be approved.</p>
           </div>
         </div>
       )}
@@ -380,7 +380,7 @@ export default function Enrollments() {
                 onClick={() => setStatusFilter(status)}
                 className={cn(
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize',
-                  statusFilter === status ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-primary-50/30'
+                  statusFilter === status ? 'bg-primary-100 text-primary-700' : 'text-slate-600 dark:text-slate-300 hover:bg-primary-50/30'
                 )}
               >
                 {status === 'all' ? 'All' : status}
@@ -405,39 +405,39 @@ export default function Enrollments() {
                 {getInitials(viewEnrollment.name)}
               </div>
               <div>
-                <h4 className="text-lg font-semibold text-slate-900">{viewEnrollment.name}</h4>
-                <p className="text-sm text-slate-500">{viewEnrollment.email}</p>
-                <p className="text-sm text-slate-500">ID: {viewEnrollment.student_id}</p>
+                <h4 className="text-lg font-semibold text-slate-900 dark:text-white">{viewEnrollment.name}</h4>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{viewEnrollment.email}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">ID: {viewEnrollment.student_id}</p>
               </div>
             </div>
 
             {/* Enrollment Info Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-emerald-200 dark:border-slate-700 text-sm">
               <div>
-                <p className="text-slate-500 text-xs uppercase tracking-wider">Status</p>
-                <span className={cn('badge capitalize mt-1.5 inline-block', viewEnrollment.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : viewEnrollment.status === 'rejected' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700')}>
+                <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Status</p>
+                <span className={cn('badge capitalize mt-1.5 inline-block', viewEnrollment.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : viewEnrollment.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700')}>
                   {viewEnrollment.status}
                 </span>
               </div>
               <div>
-                <p className="text-slate-500 text-xs uppercase tracking-wider">Descriptors</p>
-                <p className="font-semibold text-slate-900 mt-1.5">{viewEnrollment.descriptors} / {DESCRIPTOR_GOAL}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Descriptors</p>
+                <p className="font-semibold text-slate-900 dark:text-white mt-1.5">{viewEnrollment.descriptors} / {DESCRIPTOR_GOAL}</p>
               </div>
               <div>
-                <p className="text-slate-500 text-xs uppercase tracking-wider">Quality</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Quality</p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className={cn('font-semibold', qualityColor(viewEnrollment.quality))}>{viewEnrollment.quality}%</span>
                 </div>
               </div>
               <div>
-                <p className="text-slate-500 text-xs uppercase tracking-wider">Submitted</p>
-                <p className="font-medium text-slate-900 mt-1.5">{formatDateTime(viewEnrollment.submitted)}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Submitted</p>
+                <p className="font-medium text-slate-900 dark:text-white mt-1.5">{formatDateTime(viewEnrollment.submitted)}</p>
               </div>
             </div>
 
             {/* Descriptor Visualization */}
             <div>
-              <p className="text-sm font-medium text-slate-700 mb-2">Face Descriptor Samples</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Face Descriptor Samples</p>
               <div className="grid grid-cols-5 gap-3">
                 {Array.from({ length: DESCRIPTOR_GOAL }).map((_, i) => {
                   const captured = i < viewEnrollment.descriptors;
@@ -446,17 +446,17 @@ export default function Enrollments() {
                       key={i}
                       className={cn(
                         'aspect-square rounded-xl flex flex-col items-center justify-center border transition-colors',
-                        captured ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'
+                        captured ? 'bg-primary-50 border-emerald-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-800/50 border-emerald-200 dark:border-slate-700'
                       )}
                     >
                       {captured ? (
                         <>
-                          <ScanFace className="w-6 h-6 text-emerald-500 mb-1" />
-                          <span className="text-[10px] font-medium text-emerald-600">Sample {i + 1}</span>
+                          <ScanFace className="w-6 h-6 text-primary-500 mb-1" />
+                          <span className="text-[10px] font-medium text-primary-600">Sample {i + 1}</span>
                         </>
                       ) : (
                         <>
-                          <div className="w-6 h-6 rounded-full border-2 border-dashed border-slate-300 mb-1" />
+                  <div className="w-6 h-6 rounded-full border-2 border-dashed border-emerald-300 mb-1" />
                           <span className="text-[10px] font-medium text-slate-400">Empty</span>
                         </>
                       )}
@@ -468,7 +468,7 @@ export default function Enrollments() {
 
             {/* Quality Breakdown */}
             <div>
-              <p className="text-sm font-medium text-slate-700 mb-2">Scan Quality Metrics</p>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Scan Quality Metrics</p>
               <div className="space-y-2">
                 {[
                   { label: 'Face Detection Confidence', value: viewEnrollment.quality },
@@ -476,8 +476,8 @@ export default function Enrollments() {
                   { label: 'Descriptor Consistency', value: Math.max(0, viewEnrollment.quality - 2) },
                 ].map((metric) => (
                   <div key={metric.label} className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500 w-40 flex-shrink-0">{metric.label}</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 w-40 flex-shrink-0">{metric.label}</span>
+                    <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                       <div className={cn('h-full rounded-full', qualityBg(metric.value))} style={{ width: `${metric.value}%` }} />
                     </div>
                     <span className={cn('text-xs font-semibold w-10 text-right', qualityColor(metric.value))}>{metric.value}%</span>
@@ -487,18 +487,18 @@ export default function Enrollments() {
             </div>
 
             {/* Scan Method Info */}
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-2">
-              <Video className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-emerald-800">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+              <Video className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-800">
                 <p className="font-medium">Captured via {viewEnrollment.method}</p>
-                <p className="text-xs text-emerald-600 mt-0.5">
+                <p className="text-xs text-blue-600 mt-0.5">
                   Face-API.js TinyFaceDetector + FaceLandmark68 + FaceRecognition — {viewEnrollment.descriptors} 128-dimensional descriptors
                 </p>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-3 pt-2 border-t border-emerald-100 dark:border-slate-700">
               <button
                 onClick={() => { openVerify(viewEnrollment); setViewEnrollment(null); }}
                 className="btn-secondary text-sm flex items-center gap-1.5"
@@ -533,25 +533,25 @@ export default function Enrollments() {
                   {getInitials(verifyTarget.name)}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{verifyTarget.name}</p>
-                  <p className="text-xs text-slate-500">{verifyTarget.student_id}</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{verifyTarget.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{verifyTarget.student_id}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {verifyStatus === 'detecting' && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
                     <CircleDot className="w-3 h-3 animate-pulse" />
                     Detecting
                   </span>
                 )}
                 {verifyStatus === 'matched' && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
                     <CheckCircle className="w-3 h-3" />
                     Match Found
                   </span>
                 )}
                 {verifyStatus === 'no_match' && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
                     <AlertTriangle className="w-3 h-3" />
                     Low Match
                   </span>
@@ -596,7 +596,7 @@ export default function Enrollments() {
                     <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3 z-10">
                       <div className={cn(
                         'w-16 h-16 rounded-full flex items-center justify-center',
-                        verifyStatus === 'matched' ? 'bg-emerald-500' : 'bg-slate-500'
+                        verifyStatus === 'matched' ? 'bg-emerald-500' : 'bg-red-500'
                       )}>
                         {verifyStatus === 'matched' ? (
                           <CheckCircle className="w-8 h-8 text-white" />
@@ -624,8 +624,8 @@ export default function Enrollments() {
                 </>
               ) : cameraState === 'denied' ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                  <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                    <VideoOff className="w-7 h-7 text-emerald-400" />
+                  <div className="w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <VideoOff className="w-7 h-7 text-red-400" />
                   </div>
                   <h4 className="text-white font-semibold">Camera Access Denied</h4>
                   <p className="text-sm text-slate-400 text-center max-w-xs">
@@ -634,8 +634,8 @@ export default function Enrollments() {
                 </div>
               ) : cameraState === 'error' ? (
                 <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                  <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                    <AlertTriangle className="w-7 h-7 text-emerald-400" />
+                  <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center">
+                    <AlertTriangle className="w-7 h-7 text-amber-400" />
                   </div>
                   <h4 className="text-white font-semibold">Camera Unavailable</h4>
                   <p className="text-sm text-slate-400 text-center max-w-xs">
@@ -644,7 +644,7 @@ export default function Enrollments() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                  <Loader2 className="w-10 h-10 text-slate-500 animate-spin" />
+                  <Loader2 className="w-10 h-10 text-slate-500 dark:text-slate-400 animate-spin" />
                   <p className="text-slate-400 text-sm">
                     {modelsLoading ? 'Loading face detection models…' : 'Initializing camera…'}
                   </p>
@@ -654,7 +654,7 @@ export default function Enrollments() {
 
             {/* Detection progress bar */}
             <div>
-              <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
                 <span>Detection progress</span>
                 <span>{Math.min(detectionCount, 3)}/3 samples</span>
               </div>
@@ -664,7 +664,7 @@ export default function Enrollments() {
                     key={i}
                     className={cn(
                       'flex-1 h-2 rounded-full transition-all duration-500',
-                      i < detectionCount ? 'bg-emerald-500' : 'bg-slate-200',
+                      i < detectionCount ? 'bg-primary-500' : 'bg-slate-200',
                     )}
                   />
                 ))}
@@ -675,17 +675,17 @@ export default function Enrollments() {
             {matchScore !== null && (
               <div className={cn(
                 'p-4 rounded-lg border flex items-start gap-3',
-                verifyStatus === 'matched' ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'
+                verifyStatus === 'matched' ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-slate-700' : 'bg-slate-50 dark:bg-slate-800/50 border-emerald-200 dark:border-slate-700'
               )}>
-                <ShieldCheck className={cn('w-5 h-5 mt-0.5 flex-shrink-0', verifyStatus === 'matched' ? 'text-emerald-600' : 'text-slate-500')} />
+                <ShieldCheck className={cn('w-5 h-5 mt-0.5 flex-shrink-0', verifyStatus === 'matched' ? 'text-emerald-600' : 'text-slate-500 dark:text-slate-400')} />
                 <div>
-                  <p className={cn('text-sm font-semibold', verifyStatus === 'matched' ? 'text-emerald-800' : 'text-slate-700')}>
+                  <p className={cn('text-sm font-semibold', verifyStatus === 'matched' ? 'text-emerald-800' : 'text-slate-700 dark:text-slate-300')}>
                     {verifyStatus === 'matched'
                       ? `Face verified with ${matchScore}% confidence`
                       : `Low confidence: ${matchScore}%. Re-enrollment may be needed.`
                     }
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Live face detection via Face-API.js TinyFaceDetector (3 sample verification)
                   </p>
                 </div>
@@ -693,7 +693,7 @@ export default function Enrollments() {
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-3 pt-2 border-t border-emerald-100 dark:border-slate-700">
               {(verifyStatus === 'matched' || verifyStatus === 'no_match') && (
                 <button
                   onClick={() => {
@@ -743,11 +743,11 @@ export default function Enrollments() {
       <Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)} title="Reject Enrollment" size="sm">
         {rejectTarget && (
           <form onSubmit={(e) => { e.preventDefault(); setRejectTarget(null); }} className="space-y-4">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Reject facial enrollment for <strong>{rejectTarget.name}</strong> ({rejectTarget.student_id})?
             </p>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Reason (optional)</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reason (optional)</label>
               <textarea
                 rows={3}
                 value={rejectReason}

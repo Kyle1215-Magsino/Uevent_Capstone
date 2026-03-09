@@ -14,11 +14,11 @@ export default function NotFound() {
   const homeLink = user ? dashboardMap[user.role] || '/' : '/';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center p-4 animate-fade-in">
       <div className="text-center max-w-md">
         <p className="text-8xl font-extrabold text-primary-500">404</p>
-        <h1 className="mt-4 text-2xl font-bold text-slate-900">Page Not Found</h1>
-        <p className="mt-2 text-slate-500">
+        <h1 className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">Page Not Found</h1>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">
           Sorry, the page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6 flex items-center justify-center gap-3">

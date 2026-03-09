@@ -49,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/events', [EventController::class, 'store']);
         Route::put('/events/{event}', [EventController::class, 'update']);
         Route::delete('/events/{event}', [EventController::class, 'destroy']);
+        Route::patch('/events/{event}/archive', [EventController::class, 'archive']);
+        Route::patch('/events/{event}/restore', [EventController::class, 'restore']);
+        Route::post('/events/bulk-archive', [EventController::class, 'bulkArchive']);
+        Route::post('/events/bulk-restore', [EventController::class, 'bulkRestore']);
 
         // Attendance management
         Route::get('/events/{event}/attendance', [AttendanceController::class, 'byEvent']);

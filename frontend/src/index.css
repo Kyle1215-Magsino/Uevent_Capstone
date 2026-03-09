@@ -12,10 +12,20 @@
   }
 }
 
+/* Dark mode base overrides — outside @layer to ensure proper specificity */
+html.dark body {
+  background-color: #0f172a; /* slate-900 */
+  color: #f1f5f9; /* slate-100 */
+}
+html.dark ::selection {
+  background-color: #064e3b; /* primary-900 */
+  color: #d1fae5; /* primary-100 */
+}
+
 @layer components {
   .btn-primary {
     @apply bg-primary-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm
-      hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2
+      hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2
       transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none;
     box-shadow: 0 4px 14px rgba(16,185,129,0.25);
   }
@@ -27,15 +37,15 @@
   }
 
   .btn-secondary {
-    @apply bg-white text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-sm border border-slate-200
-      hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900
-      focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2
+    @apply bg-white text-slate-700 px-4 py-2.5 rounded-xl font-semibold text-sm border border-emerald-200
+      hover:bg-slate-50 hover:border-emerald-300 hover:text-slate-900
+      focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2
       shadow-sm hover:shadow transition-all duration-200;
   }
 
   .btn-danger {
-    @apply bg-emerald-800 text-white px-4 py-2.5 rounded-xl font-semibold text-sm
-      hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2
+    @apply bg-red-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm
+      hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2
       shadow-sm transition-all duration-200;
   }
 
@@ -47,19 +57,19 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-white
-      focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
+    @apply w-full px-4 py-2.5 border border-emerald-200 rounded-xl text-sm bg-white
+      focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-transparent
       placeholder:text-slate-400 transition-all duration-200
-      hover:border-slate-300;
+      hover:border-emerald-300;
   }
 
   .card {
-    @apply bg-white rounded-2xl border border-emerald-400 transition-shadow duration-200;
+    @apply bg-white rounded-2xl border border-emerald-200 transition-shadow duration-200;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 16px rgba(0,0,0,0.04);
   }
 
   .card-hover {
-    @apply card hover:border-emerald-500;
+    @apply card hover:border-emerald-400;
   }
   .card-hover:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 12px 28px rgba(0,0,0,0.06);
@@ -70,32 +80,113 @@
   }
 
   .badge-success {
-    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50;
+    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-slate-200/50;
   }
-
   .badge-warning {
-    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50;
+    @apply badge bg-amber-50 text-amber-700 ring-1 ring-amber-200/50;
   }
-
   .badge-danger {
-    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50;
+    @apply badge bg-red-50 text-red-700 ring-1 ring-red-200/50;
   }
-
   .badge-info {
-    @apply badge bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50;
+    @apply badge bg-blue-50 text-blue-700 ring-1 ring-blue-200/50;
   }
-
   .badge-primary {
-    @apply badge bg-primary-50 text-primary-700 ring-1 ring-primary-200/50;
+    @apply badge bg-primary-50 text-primary-700 ring-1 ring-slate-200/50;
   }
 
   .glass {
     @apply bg-white/70 backdrop-blur-xl border border-white/20;
   }
-
   .glass-dark {
     @apply bg-slate-900/70 backdrop-blur-xl border border-white/10;
   }
+}
+
+/* ═══ Dark mode component overrides — outside @layer for proper specificity ═══ */
+html.dark .btn-primary {
+  --tw-ring-offset-color: #0f172a;
+}
+
+html.dark .btn-secondary {
+  background-color: #1e293b; /* slate-800 */
+  color: #e2e8f0; /* slate-200 */
+  border-color: #334155; /* slate-700 */
+  --tw-ring-offset-color: #0f172a;
+}
+html.dark .btn-secondary:hover {
+  background-color: #334155; /* slate-700 */
+  border-color: #475569; /* slate-600 */
+  color: #fff;
+}
+
+html.dark .btn-danger {
+  --tw-ring-offset-color: #0f172a;
+}
+
+html.dark .btn-ghost {
+  color: #94a3b8; /* slate-400 */
+}
+html.dark .btn-ghost:hover {
+  background-color: #1e293b; /* slate-800 */
+  color: #f1f5f9; /* slate-100 */
+}
+
+html.dark .input-field {
+  background-color: #1e293b; /* slate-800 */
+  border-color: #334155; /* slate-700 */
+  color: #f1f5f9; /* slate-100 */
+}
+html.dark .input-field::placeholder {
+  color: #64748b; /* slate-500 */
+}
+html.dark .input-field:hover {
+  border-color: #475569; /* slate-600 */
+}
+html.dark .input-field:focus {
+  --tw-ring-color: #64748b; /* slate-500 */
+}
+
+html.dark .card {
+  background-color: #1e293b; /* slate-800 */
+  border-color: #334155; /* slate-700 */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 6px 16px rgba(0,0,0,0.15);
+}
+
+html.dark .card-hover:hover {
+  border-color: #64748b; /* slate-500 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 12px 28px rgba(0,0,0,0.2);
+}
+
+html.dark .badge-success {
+  background-color: rgba(6,78,59,0.3); /* emerald-900/30 */
+  color: #34d399; /* emerald-400 */
+  --tw-ring-color: rgba(065,95,78,0.5);
+}
+html.dark .badge-warning {
+  background-color: rgba(120,53,15,0.3); /* amber-900/30 */
+  color: #fbbf24; /* amber-400 */
+  --tw-ring-color: rgba(146,76,13,0.5);
+}
+html.dark .badge-danger {
+  background-color: rgba(127,29,29,0.3); /* red-900/30 */
+  color: #f87171; /* red-400 */
+  --tw-ring-color: rgba(153,27,27,0.5);
+}
+html.dark .badge-info {
+  background-color: rgba(30,58,138,0.3); /* blue-900/30 */
+  color: #60a5fa; /* blue-400 */
+  --tw-ring-color: rgba(30,64,175,0.5);
+}
+html.dark .badge-primary {
+  background-color: rgba(6,78,59,0.3); /* primary-900/30 */
+  color: #34d399; /* primary-400 */
+  --tw-ring-color: rgba(6,95,70,0.5);
+}
+
+html.dark .glass {
+  background-color: rgba(15,23,42,0.7); /* slate-900/70 */
+  border-color: rgba(255,255,255,0.1);
 }
 
 /* Custom scrollbar */
@@ -115,4 +206,12 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

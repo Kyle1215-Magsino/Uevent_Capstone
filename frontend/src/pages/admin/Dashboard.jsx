@@ -49,9 +49,9 @@ export default function AdminDashboard() {
   const { user } = useAuth();
 
   const statusColors = {
-    upcoming: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
-    ongoing: 'bg-primary-50 text-primary-700 ring-1 ring-primary-200/50',
-    completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50',
+    upcoming: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/50',
+    ongoing: 'bg-primary-50 text-primary-700 ring-1 ring-slate-200/50',
+    completed: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200/50',
   };
 
   return (
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
           change="12%"
           changeType="increase"
           icon={Users}
-          iconColor="emerald"
+          iconColor="violet"
         />
         <StatsCard
           title="Total Events"
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
           change="8%"
           changeType="increase"
           icon={Calendar}
-          iconColor="emerald"
+          iconColor="blue"
         />
         <StatsCard
           title="Attendance Logs"
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
           change="5%"
           changeType="increase"
           icon={ScanFace}
-          iconColor="emerald"
+          iconColor="amber"
         />
         <StatsCard
           title="RFID Tags Assigned"
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
           change="18%"
           changeType="increase"
           icon={CreditCard}
-          iconColor="emerald"
+          iconColor="orange"
         />
         <StatsCard
           title="Location Verified"
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
           change="32%"
           changeType="increase"
           icon={MapPin}
-          iconColor="emerald"
+          iconColor="rose"
         />
       </div>
 
@@ -117,9 +117,9 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Active Events', value: mockStats.activeEvents, href: '/admin/events', icon: CalendarDays, color: 'text-primary-600 bg-primary-50' },
-          { label: 'Pending Enrollments', value: mockStats.pendingEnrollments, href: '/admin/enrollments', icon: Hourglass, color: 'text-emerald-600 bg-emerald-50' },
-          { label: 'RFID Management', value: mockStats.rfidAssigned.toLocaleString(), href: '/admin/rfid', icon: CreditCard, color: 'text-emerald-600 bg-emerald-50' },
-          { label: 'Generate Report', value: 'Reports', href: '/admin/reports', icon: FileBarChart, color: 'text-emerald-600 bg-emerald-50' },
+          { label: 'Pending Enrollments', value: mockStats.pendingEnrollments, href: '/admin/enrollments', icon: Hourglass, color: 'text-amber-600 bg-amber-50' },
+          { label: 'RFID Management', value: mockStats.rfidAssigned.toLocaleString(), href: '/admin/rfid', icon: CreditCard, color: 'text-orange-600 bg-orange-50' },
+          { label: 'Generate Report', value: 'Reports', href: '/admin/reports', icon: FileBarChart, color: 'text-violet-600 bg-violet-50' },
         ].map((action) => (
           <Link key={action.label} to={action.href} className="card-hover p-5 group">
             <div className="flex items-center justify-between mb-3">
@@ -128,8 +128,8 @@ export default function AdminDashboard() {
               </div>
               <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-primary-500 group-hover:translate-x-0.5 transition-all duration-200" />
             </div>
-            <p className="text-sm text-slate-500 font-medium">{action.label}</p>
-            <p className={`text-lg font-bold text-slate-900 mt-0.5`}>{action.value}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{action.label}</p>
+            <p className={`text-lg font-bold text-slate-900 dark:text-white mt-0.5`}>{action.value}</p>
           </Link>
         ))}
       </div>
@@ -137,28 +137,28 @@ export default function AdminDashboard() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Recent Events */}
         <div className="lg:col-span-2 card">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-900">Recent Events</h3>
+          <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 dark:text-white">Recent Events</h3>
             <Link to="/admin/events" className="text-sm text-primary-600 hover:text-primary-700 font-semibold transition-colors">
               View All
             </Link>
           </div>
-          <div className="divide-y divide-slate-100/80">
+          <div className="divide-y divide-emerald-100/80">
             {mockRecentEvents.map((event) => (
               <div key={event.id} className="px-6 py-4 flex items-center justify-between hover:bg-primary-50/30 transition-colors duration-150">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{event.title}</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{event.title}</p>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-slate-500">{event.organizer}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{event.organizer}</span>
                     <span className="text-xs text-slate-300">•</span>
-                    <span className="text-xs text-slate-500 flex items-center gap-1">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatDateTime(event.date)}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 ml-4">
-                  <span className="text-xs text-slate-500 font-medium">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     {event.attendees}/{event.capacity}
                   </span>
                   <span className={cn('badge capitalize', statusColors[event.status])}>
@@ -172,15 +172,15 @@ export default function AdminDashboard() {
 
         {/* Recent Activity */}
         <div className="card">
-          <div className="px-6 py-4 border-b border-slate-100">
-            <h3 className="font-semibold text-slate-900">Recent Activity</h3>
+          <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700">
+            <h3 className="font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
           </div>
-          <div className="divide-y divide-slate-100/80">
+          <div className="divide-y divide-emerald-100/80">
             {mockRecentActivity.map((activity) => (
               <div key={activity.id} className="px-6 py-3.5 hover:bg-primary-50/30 transition-colors duration-150">
-                <p className="text-sm text-slate-700 font-medium">{activity.action}</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{activity.action}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-slate-500">{activity.user}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{activity.user}</span>
                   <span className="text-xs text-slate-300">•</span>
                   <span className="text-xs text-slate-400">{activity.time}</span>
                 </div>

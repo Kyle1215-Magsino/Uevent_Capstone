@@ -40,9 +40,9 @@ export default function StudentDashboard() {
   const { user } = useAuth();
 
   const enrollmentBanner = {
-    enrolled: { bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle, iconColor: 'text-emerald-600', text: 'Your facial data is enrolled and active.', textColor: 'text-emerald-800' },
-    pending: { bg: 'bg-emerald-50 border-emerald-200', icon: Clock, iconColor: 'text-emerald-600', text: 'Your facial enrollment is pending approval.', textColor: 'text-emerald-800' },
-    not_enrolled: { bg: 'bg-emerald-50 border-emerald-200', icon: AlertCircle, iconColor: 'text-emerald-600', text: 'You haven\'t enrolled your facial data yet.', textColor: 'text-emerald-800' },
+    enrolled: { bg: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-slate-700', icon: CheckCircle, iconColor: 'text-emerald-600', text: 'Your facial data is enrolled and active.', textColor: 'text-emerald-800' },
+    pending: { bg: 'bg-amber-50 border-amber-200', icon: Clock, iconColor: 'text-amber-600', text: 'Your facial enrollment is pending approval.', textColor: 'text-amber-800' },
+    not_enrolled: { bg: 'bg-slate-50 dark:bg-slate-800/50 border-emerald-200 dark:border-slate-700', icon: AlertCircle, iconColor: 'text-slate-600 dark:text-slate-300', text: 'You haven\'t enrolled your facial data yet.', textColor: 'text-slate-800' },
   };
 
   const banner = enrollmentBanner[mockStats.enrollmentStatus];
@@ -73,32 +73,32 @@ export default function StudentDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatsCard title="Events Attended" value={mockStats.eventsAttended} icon={ClipboardCheck} iconColor="emerald" />
-        <StatsCard title="Total Events" value={mockStats.totalEvents} icon={Calendar} iconColor="emerald" />
-        <StatsCard title="Attendance Rate" value={`${mockStats.attendanceRate}%`} icon={History} iconColor="emerald" />
+        <StatsCard title="Total Events" value={mockStats.totalEvents} icon={Calendar} iconColor="blue" />
+        <StatsCard title="Attendance Rate" value={`${mockStats.attendanceRate}%`} icon={History} iconColor="amber" />
         <StatsCard
           title="Face Enrollment"
           value={mockStats.enrollmentStatus === 'enrolled' ? 'Active' : mockStats.enrollmentStatus === 'pending' ? 'Pending' : 'None'}
           icon={ScanFace}
-          iconColor="emerald"
+          iconColor="violet"
         />
-        <StatsCard title="RFID Tag" value={mockStats.rfidStatus === 'active' ? mockStats.rfidTag : 'Not Assigned'} icon={CreditCard} iconColor="emerald" />
-        <StatsCard title="Campus Location" value="Geofence Active" icon={Navigation} iconColor="emerald" />
+        <StatsCard title="RFID Tag" value={mockStats.rfidStatus === 'active' ? mockStats.rfidTag : 'Not Assigned'} icon={CreditCard} iconColor="rose" />
+        <StatsCard title="Campus Location" value="Geofence Active" icon={Navigation} iconColor="cyan" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Upcoming Events */}
         <div className="card">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-900">Upcoming Events</h3>
+          <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 dark:text-white">Upcoming Events</h3>
             <Link to="/student/events" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               View All
             </Link>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-emerald-100">
             {mockUpcomingEvents.map((event) => (
               <div key={event.id} className="px-6 py-4 hover:bg-primary-50/30">
-                <p className="text-sm font-medium text-slate-900">{event.title}</p>
-                <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                <p className="text-sm font-medium text-slate-900 dark:text-white">{event.title}</p>
+                <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {formatDateTime(event.date)}
@@ -115,18 +115,18 @@ export default function StudentDashboard() {
 
         {/* Recent Attendance */}
         <div className="card">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-900">Recent Attendance</h3>
+          <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-900 dark:text-white">Recent Attendance</h3>
             <Link to="/student/attendance" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               View All
             </Link>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-emerald-100">
             {mockRecentAttendance.map((record) => (
               <div key={record.id} className="px-6 py-4 flex items-center justify-between hover:bg-primary-50/30">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{record.event}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{formatDateTime(record.date)}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{record.event}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{formatDateTime(record.date)}</p>
                 </div>
                 <StatusBadge status={record.status} />
               </div>

@@ -20,6 +20,7 @@ import AdminReports from './pages/admin/Reports';
 import Analytics from './pages/admin/Analytics';
 import Enrollments from './pages/admin/Enrollments';
 import RFIDManagement from './pages/admin/RFIDManagement';
+import EventDetail from './pages/admin/EventDetail';
 
 // Organizer Pages
 import OrganizerDashboard from './pages/organizer/Dashboard';
@@ -28,14 +29,12 @@ import ManageEvents from './pages/organizer/ManageEvents';
 import LiveDashboard from './pages/organizer/LiveDashboard';
 import AttendanceMonitor from './pages/organizer/AttendanceMonitor';
 import OrganizerReports from './pages/organizer/Reports';
-import CheckInStation from './pages/organizer/CheckInStation';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
 import StudentEvents from './pages/student/Events';
 import FacialEnrollment from './pages/student/FacialEnrollment';
 import AttendanceHistory from './pages/student/AttendanceHistory';
-import EventCheckIn from './pages/student/EventCheckIn';
 
 function AppRoutes() {
   const { isAuthenticated, user } = useAuth();
@@ -57,6 +56,7 @@ function AppRoutes() {
       <Route path="/admin/analytics" element={<RoleRoute roles={['admin']}><AppLayout><Analytics /></AppLayout></RoleRoute>} />
       <Route path="/admin/enrollments" element={<RoleRoute roles={['admin']}><AppLayout><Enrollments /></AppLayout></RoleRoute>} />
       <Route path="/admin/rfid" element={<RoleRoute roles={['admin']}><AppLayout><RFIDManagement /></AppLayout></RoleRoute>} />
+      <Route path="/admin/events/:id" element={<RoleRoute roles={['admin']}><AppLayout><EventDetail /></AppLayout></RoleRoute>} />
       <Route path="/admin/events/:id/live" element={<RoleRoute roles={['admin']}><AppLayout><LiveDashboard /></AppLayout></RoleRoute>} />
       <Route path="/admin/profile" element={<RoleRoute roles={['admin']}><AppLayout><Profile /></AppLayout></RoleRoute>} />
       <Route path="/admin/settings" element={<RoleRoute roles={['admin']}><AppLayout><Settings /></AppLayout></RoleRoute>} />
@@ -67,7 +67,6 @@ function AppRoutes() {
       <Route path="/organizer/events" element={<RoleRoute roles={['organizer']}><AppLayout><ManageEvents /></AppLayout></RoleRoute>} />
       <Route path="/organizer/events/:id/live" element={<RoleRoute roles={['organizer', 'admin']}><AppLayout><LiveDashboard /></AppLayout></RoleRoute>} />
       <Route path="/organizer/attendance" element={<RoleRoute roles={['organizer']}><AppLayout><AttendanceMonitor /></AppLayout></RoleRoute>} />
-      <Route path="/organizer/checkin" element={<RoleRoute roles={['organizer']}><AppLayout><CheckInStation /></AppLayout></RoleRoute>} />
       <Route path="/organizer/reports" element={<RoleRoute roles={['organizer']}><AppLayout><OrganizerReports /></AppLayout></RoleRoute>} />
       <Route path="/organizer/profile" element={<RoleRoute roles={['organizer']}><AppLayout><Profile /></AppLayout></RoleRoute>} />
       <Route path="/organizer/settings" element={<RoleRoute roles={['organizer']}><AppLayout><Settings /></AppLayout></RoleRoute>} />
@@ -75,7 +74,6 @@ function AppRoutes() {
       {/* ── Student Routes ── */}
       <Route path="/student" element={<RoleRoute roles={['student']}><AppLayout><StudentDashboard /></AppLayout></RoleRoute>} />
       <Route path="/student/events" element={<RoleRoute roles={['student']}><AppLayout><StudentEvents /></AppLayout></RoleRoute>} />
-      <Route path="/student/checkin/:eventId" element={<RoleRoute roles={['student']}><AppLayout><EventCheckIn /></AppLayout></RoleRoute>} />
       <Route path="/student/enrollment" element={<RoleRoute roles={['student']}><AppLayout><FacialEnrollment /></AppLayout></RoleRoute>} />
       <Route path="/student/attendance" element={<RoleRoute roles={['student']}><AppLayout><AttendanceHistory /></AppLayout></RoleRoute>} />
       <Route path="/student/profile" element={<RoleRoute roles={['student']}><AppLayout><Profile /></AppLayout></RoleRoute>} />

@@ -21,7 +21,7 @@ export default function AuthLayout({ children, title, subtitle }) {
         </Link>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-emerald-200/80 p-8">
           {(title || subtitle) && (
             <div className="text-center mb-6">
               {title && <h2 className="text-2xl font-bold text-slate-900">{title}</h2>}

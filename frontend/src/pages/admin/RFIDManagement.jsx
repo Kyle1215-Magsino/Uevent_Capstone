@@ -62,8 +62,8 @@ export default function RFIDManagement() {
             {getInitials(row.name)}
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-900">{row.name}</p>
-            <p className="text-xs text-slate-500">{row.email}</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{row.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
           </div>
         </div>
       ),
@@ -73,8 +73,8 @@ export default function RFIDManagement() {
       key: 'rfid_tag',
       label: 'RFID Tag',
       render: (val) => val ? (
-        <span className="font-mono text-sm text-slate-900 flex items-center gap-1.5">
-          <Tag className="w-3.5 h-3.5 text-emerald-600" />{val}
+        <span className="font-mono text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+          <Tag className="w-3.5 h-3.5 text-orange-600" />{val}
         </span>
       ) : (
         <span className="text-sm text-slate-400 italic">Not assigned</span>
@@ -87,8 +87,9 @@ export default function RFIDManagement() {
         <span className={cn(
           'badge capitalize',
           val === 'active' ? 'bg-emerald-100 text-emerald-800' :
-          val === 'deactivated' ? 'bg-slate-100 text-slate-600' :
-          'bg-emerald-50 text-emerald-700'
+          val === 'deactivated' ? 'bg-red-100 text-red-700' :
+          val === 'unassigned' ? 'bg-blue-100 text-blue-700' :
+          'bg-amber-100 text-amber-700'
         )}>
           {val}
         </span>
@@ -98,7 +99,7 @@ export default function RFIDManagement() {
       key: 'assigned_date',
       label: 'Assigned',
       render: (val) => val ? (
-        <span className="text-sm text-slate-500">{new Date(val).toLocaleDateString()}</span>
+        <span className="text-sm text-slate-500 dark:text-slate-400">{new Date(val).toLocaleDateString()}</span>
       ) : (
         <span className="text-sm text-slate-400">—</span>
       ),
@@ -111,7 +112,7 @@ export default function RFIDManagement() {
           {row.rfid_status === 'unassigned' && (
             <button
               onClick={() => { setAssignModal(row); setRfidInput(''); }}
-              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Assign RFID"
             >
               <Plus className="w-4 h-4" />
@@ -121,14 +122,14 @@ export default function RFIDManagement() {
             <>
               <button
                 onClick={() => { setAssignModal(row); setRfidInput(row.rfid_tag || ''); }}
-                className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                 title="Reassign"
               >
                 <Edit className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setDeactivateConfirm(row)}
-                className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                 title="Deactivate"
               >
                 <XCircle className="w-4 h-4" />
@@ -138,7 +139,7 @@ export default function RFIDManagement() {
           {row.rfid_status === 'deactivated' && (
             <button
               onClick={() => { setAssignModal(row); setRfidInput(''); }}
-              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
               title="Reactivate / Reassign"
             >
               <CreditCard className="w-4 h-4" />
@@ -159,10 +160,10 @@ export default function RFIDManagement() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Students', value: mockStats.total, icon: Users, color: 'bg-emerald-100 text-emerald-600' },
+          { label: 'Total Students', value: mockStats.total, icon: Users, color: 'bg-primary-100 text-primary-600' },
           { label: 'Active Tags', value: mockStats.active, icon: CheckCircle, color: 'bg-emerald-100 text-emerald-600' },
-          { label: 'Unassigned', value: mockStats.unassigned, icon: AlertTriangle, color: 'bg-emerald-50 text-emerald-600' },
-          { label: 'Deactivated', value: mockStats.deactivated, icon: XCircle, color: 'bg-slate-100 text-slate-600' },
+          { label: 'Unassigned', value: mockStats.unassigned, icon: AlertTriangle, color: 'bg-blue-100 text-blue-600' },
+          { label: 'Deactivated', value: mockStats.deactivated, icon: XCircle, color: 'bg-red-100 text-red-600' },
         ].map((stat) => (
           <div key={stat.label} className="card-hover p-5">
             <div className="flex items-center justify-between mb-2">
@@ -170,8 +171,8 @@ export default function RFIDManagement() {
                 <stat.icon className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
-            <p className="text-2xl font-bold text-slate-900 mt-0.5">{stat.value}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{stat.label}</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -189,7 +190,7 @@ export default function RFIDManagement() {
                 onClick={() => setStatusFilter(status)}
                 className={cn(
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize',
-                  statusFilter === status ? 'bg-primary-100 text-primary-700' : 'text-slate-600 hover:bg-primary-50/30'
+                  statusFilter === status ? 'bg-primary-100 text-primary-700' : 'text-slate-600 dark:text-slate-300 hover:bg-primary-50/30'
                 )}
               >
                 {status === 'all' ? 'All' : status}
@@ -205,11 +206,11 @@ export default function RFIDManagement() {
       </div>
 
       {/* RFID Info */}
-      <div className="card p-4 flex items-start gap-3 bg-emerald-50 border-emerald-200">
-        <ShieldCheck className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-        <div className="text-sm text-emerald-800">
+      <div className="card p-4 flex items-start gap-3 bg-orange-50 border-orange-200">
+        <ShieldCheck className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+        <div className="text-sm text-orange-800">
           <p className="font-medium">RFID Tag Assignment</p>
-          <p className="text-xs text-emerald-600 mt-0.5">
+          <p className="text-xs text-orange-600 mt-0.5">
             Each student receives a unique RFID tag linked to their student ID. Tags are used for automated attendance check-in at event venues via RFID readers.
           </p>
         </div>
@@ -224,18 +225,18 @@ export default function RFIDManagement() {
       >
         {assignModal && (
           <form onSubmit={handleAssign} className="space-y-4">
-            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+            <div className="flex items-center gap-3 pb-4 border-b border-emerald-100 dark:border-slate-700">
               <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-sm font-semibold">
                 {getInitials(assignModal.name)}
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">{assignModal.name}</p>
-                <p className="text-xs text-slate-500">{assignModal.student_id}</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{assignModal.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{assignModal.student_id}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">RFID Tag Number *</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">RFID Tag Number *</label>
               <div className="relative">
                 <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
@@ -248,7 +249,7 @@ export default function RFIDManagement() {
                   autoFocus
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-1">Scan or manually enter the RFID tag identifier.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Scan or manually enter the RFID tag identifier.</p>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">

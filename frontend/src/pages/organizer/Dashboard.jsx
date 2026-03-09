@@ -30,9 +30,9 @@ export default function OrganizerDashboard() {
   const { user } = useAuth();
 
   const statusColors = {
-    upcoming: 'bg-emerald-100 text-emerald-800',
+    upcoming: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200/50',
     ongoing: 'bg-primary-100 text-primary-800',
-    completed: 'bg-emerald-100 text-emerald-800',
+    completed: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200/50',
   };
 
   return (
@@ -50,31 +50,31 @@ export default function OrganizerDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="My Events" value={mockStats.totalEvents} icon={Calendar} iconColor="emerald" />
+        <StatsCard title="My Events" value={mockStats.totalEvents} icon={Calendar} iconColor="blue" />
         <StatsCard title="Active Now" value={mockStats.activeEvents} icon={Clock} iconColor="primary" />
         <StatsCard title="Total Attendance" value={mockStats.totalAttendance.toLocaleString()} icon={ClipboardCheck} iconColor="emerald" />
-        <StatsCard title="Avg. Rate" value={`${mockStats.avgRate}%`} icon={TrendingUp} iconColor="emerald" />
+        <StatsCard title="Avg. Rate" value={`${mockStats.avgRate}%`} icon={TrendingUp} iconColor="amber" />
       </div>
 
       {/* My Events List */}
       <div className="card">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-900">My Recent Events</h3>
+        <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between">
+          <h3 className="font-semibold text-slate-900 dark:text-white">My Recent Events</h3>
           <Link to="/organizer/events" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
             View All
           </Link>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-emerald-100">
           {mockMyEvents.map((event) => (
             <div key={event.id} className="px-6 py-4 flex items-center justify-between hover:bg-primary-50/30">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm font-medium text-slate-900 truncate">{event.title}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{event.title}</p>
                   <span className={cn('badge capitalize text-xs', statusColors[event.status])}>
                     {event.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-500">
+                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {formatDateTime(event.date)}
@@ -107,18 +107,18 @@ export default function OrganizerDashboard() {
       <div className="grid sm:grid-cols-3 gap-4">
         <Link to="/organizer/events" className="card-hover p-5 group">
           <CalendarPlus className="w-8 h-8 text-primary-600 mb-3" />
-          <h3 className="font-semibold text-slate-900">Create New Event</h3>
-          <p className="text-sm text-slate-500 mt-1">Set up a new university event with attendance tracking.</p>
+          <h3 className="font-semibold text-slate-900 dark:text-white">Create New Event</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Set up a new university event with attendance tracking.</p>
         </Link>
         <Link to="/organizer/checkin" className="card-hover p-5 group">
-          <Radio className="w-8 h-8 text-emerald-600 mb-3" />
-          <h3 className="font-semibold text-slate-900">Check-In Station</h3>
-          <p className="text-sm text-slate-500 mt-1">Process student check-ins via RFID, face, or manual entry.</p>
+          <Radio className="w-8 h-8 text-violet-600 mb-3" />
+          <h3 className="font-semibold text-slate-900 dark:text-white">Check-In Station</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Process student check-ins via RFID, face, or manual entry.</p>
         </Link>
         <Link to="/organizer/reports" className="card-hover p-5 group">
-          <TrendingUp className="w-8 h-8 text-emerald-600 mb-3" />
-          <h3 className="font-semibold text-slate-900">Generate Reports</h3>
-          <p className="text-sm text-slate-500 mt-1">Export attendance reports for your events.</p>
+          <TrendingUp className="w-8 h-8 text-blue-600 mb-3" />
+          <h3 className="font-semibold text-slate-900 dark:text-white">Generate Reports</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Export attendance reports for your events.</p>
         </Link>
       </div>
     </div>

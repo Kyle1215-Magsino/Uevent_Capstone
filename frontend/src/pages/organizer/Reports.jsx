@@ -17,8 +17,8 @@ const chartData = mockReports.map((r) => ({ name: r.event.length > 18 ? r.event.
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white/95 backdrop-blur border border-slate-200 rounded-xl shadow-lg px-4 py-3 text-sm">
-      <p className="font-semibold text-slate-900 mb-1">{label}</p>
+    <div className="bg-white/95 backdrop-blur border border-emerald-200 dark:border-slate-700 rounded-xl shadow-lg px-4 py-3 text-sm">
+      <p className="font-semibold text-slate-900 dark:text-white mb-1">{label}</p>
       {payload.map((entry, i) => (
         <p key={i} style={{ color: entry.color }} className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -40,12 +40,12 @@ export default function OrganizerReports() {
     {
       key: 'event',
       label: 'Event',
-      render: (val) => <p className="text-sm font-medium text-slate-900">{val}</p>,
+      render: (val) => <p className="text-sm font-medium text-slate-900 dark:text-white">{val}</p>,
     },
     {
       key: 'date',
       label: 'Date',
-      render: (val) => <span className="text-sm text-slate-500">{formatDate(val)}</span>,
+      render: (val) => <span className="text-sm text-slate-500 dark:text-slate-400">{formatDate(val)}</span>,
     },
     {
       key: 'method',
@@ -56,7 +56,7 @@ export default function OrganizerReports() {
       key: 'present',
       label: 'Present',
       render: (val, row) => (
-        <span className="text-sm text-slate-700 font-medium">{val} <span className="text-slate-400 font-normal">/ {row.total}</span></span>
+        <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">{val} <span className="text-slate-400 font-normal">/ {row.total}</span></span>
       ),
     },
     {
@@ -65,7 +65,7 @@ export default function OrganizerReports() {
       render: (val) => (
         <span className={cn(
           'badge',
-          val >= 80 ? 'bg-emerald-100 text-emerald-800' : val >= 60 ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-100 text-emerald-800'
+          val >= 80 ? 'bg-emerald-100 text-emerald-800' : val >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
         )}>
           {val}%
         </span>
@@ -113,19 +113,19 @@ export default function OrganizerReports() {
           title="Total Present"
           value={mockReports.reduce((sum, r) => sum + r.present, 0).toLocaleString()}
           icon={Users}
-          iconColor="emerald"
+          iconColor="violet"
         />
         <StatsCard
           title="Avg. Rate"
           value={`${(mockReports.reduce((sum, r) => sum + r.rate, 0) / mockReports.length).toFixed(1)}%`}
           icon={BarChart3}
-          iconColor="emerald"
+          iconColor="amber"
         />
       </div>
 
       {/* Attendance Chart */}
       <div className="card p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">Attendance Overview</h3>
+        <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Attendance Overview</h3>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />

@@ -1,11 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import * as faceapi from 'face-api.js';
 import toast from 'react-hot-toast';
-import { PageHeader, Modal } from '../../components/ui';
+import { Modal } from '../../components/ui';
 import { cn, formatDateTime } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
-import { eventsAPI, attendanceAPI, enrollmentAPI } from '../../api/endpoints';
+import { attendanceAPI, enrollmentAPI } from '../../api/endpoints';
 import {
   ScanFace, CreditCard, MapPin, CheckCircle2, Clock,
   Loader2, AlertTriangle, Navigation, ChevronRight,
@@ -26,14 +25,11 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export default function EventCheckIn() {
-  const { eventId } = useParams();
+export default function EventCheckIn({ open, onClose, event: eventProp }) {
   const { user } = useAuth();
   const [step, setStep] = useState('info'); // info | verify | result
   const [selectedMethod, setSelectedMethod] = useState(null);
-  const [event, setEvent] = useState(null);
-  const [eventLoading, setEventLoading] = useState(true);
-  const [eventError, setEventError] = useState(null);
+  const event = eventProp;
 
   /* Location */
   const [locationStatus, setLocationStatus] = useState('checking');
@@ -94,31 +90,17 @@ export default function EventCheckIn() {
     );
   }, []);
 
-  /* ── Load event from API ─────────────────────────────────── */
+  /* ── Reset state when modal opens/closes ──────────────────── */
   useEffect(() => {
-    if (!eventId) {
-      setEventError('No event specified.');
-      setEventLoading(false);
-      return;
+    if (open) {
+      setStep('info');
+      setSelectedMethod(null);
+      setRfidInput('');
+      setRfidStatus('idle');
+      setFaceStatus('idle');
+      setCheckInResult(null);
     }
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await eventsAPI.getById(eventId);
-        if (!cancelled) {
-          setEvent(res.data);
-          setEventLoading(false);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setEventError(err.response?.data?.message || 'Failed to load event.');
-          setEventLoading(false);
-          toast.error('Failed to load event details.');
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [eventId]);
+  }, [open]);
 
   /* ── Face-api ────────────────────────────────────────────── */
   const loadModels = useCallback(async () => {
@@ -247,7 +229,7 @@ export default function EventCheckIn() {
 
           // Call real API to record attendance
           try {
-            const res = await attendanceAPI.faceCheckIn(event?.id || eventId, { user_id: user?.id });
+            const res = await attendanceAPI.faceCheckIn(event?.id, { user_id: user?.id });
             const attendanceStatus = res.data?.status || 'present';
             toast.success(`Face verified! (${confidence}% match) You are marked as ${attendanceStatus === 'late' ? 'LATE' : 'PRESENT'}.`);
             completeCheckIn('face', confidence, attendanceStatus);
@@ -273,7 +255,7 @@ export default function EventCheckIn() {
         toast.error('Face does not match your enrollment. Please try again or use RFID.');
       }
     }, 500);
-  }, [cameraActive, modelsLoaded, enrolledDescriptors, drawOverlay, stopCamera, event, eventId, user]);
+  }, [cameraActive, modelsLoaded, enrolledDescriptors, drawOverlay, stopCamera, event, user]);
 
   /* ── RFID ────────────────────────────────────────────────── */
   const handleRFIDSubmit = async (e) => {
@@ -282,7 +264,7 @@ export default function EventCheckIn() {
     setRfidStatus('processing');
 
     try {
-      const res = await attendanceAPI.rfidCheckIn(event?.id || eventId, { student_id: rfidInput.trim() });
+      const res = await attendanceAPI.rfidCheckIn(event?.id, { student_id: rfidInput.trim() });
       const attendanceStatus = res.data?.status || 'present';
       setRfidStatus('success');
       toast.success(`RFID verified! You are marked as ${attendanceStatus === 'late' ? 'LATE' : 'PRESENT'}.`);
@@ -323,42 +305,26 @@ export default function EventCheckIn() {
     }
   };
 
+  if (!open || !event) return null;
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      <PageHeader
-        title="Event Check-In"
-        description="Verify your identity and check in to the event."
-      />
-
-      {/* Loading / Error states */}
-      {eventLoading && (
-        <div className="max-w-2xl mx-auto card p-12 text-center">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-500">Loading event details...</p>
-        </div>
-      )}
-
-      {eventError && !eventLoading && (
-        <div className="max-w-2xl mx-auto card p-12 text-center">
-          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <p className="text-sm text-red-600 font-medium">{eventError}</p>
-          <Link to="/student/events" className="btn-secondary mt-4 inline-flex">Back to Events</Link>
-        </div>
-      )}
-
-      {!eventLoading && !eventError && event && (
-        <>
+    <Modal open={open} onClose={onClose} title="Event Check-In" size="lg">
+      <div className="-m-6">
       {/* ── Step: Event Info ── */}
       {step === 'info' && (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="p-6 space-y-6">
           {/* Event Card */}
           <div className="card p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="badge bg-emerald-100 text-emerald-800 capitalize">{event.status}</span>
-              <span className="text-xs text-slate-500">{event.organizer?.name || event.organizer || ''}</span>
+              <span className={cn('badge capitalize',
+                event.status === 'ongoing' ? 'bg-violet-100 text-violet-800' :
+                event.status === 'active' || event.status === 'present' ? 'bg-emerald-100 text-emerald-800' :
+                'bg-slate-100 dark:bg-slate-800 text-slate-800'
+              )}>{event.status}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{event.organizer?.name || event.organizer || ''}</span>
             </div>
-            <h2 className="text-xl font-bold text-slate-900">{event.title}</h2>
-            <div className="grid sm:grid-cols-3 gap-3 text-sm text-slate-500">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{event.title}</h2>
+            <div className="grid sm:grid-cols-3 gap-3 text-sm text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-slate-400" />{formatDateTime(event.date)}</span>
               <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-400" />{event.venue}</span>
               <span className="flex items-center gap-2"><Users className="w-4 h-4 text-slate-400" />Capacity: {event.capacity}</span>
@@ -368,35 +334,35 @@ export default function EventCheckIn() {
           {/* Location Verification */}
           <div className={cn(
             'card p-4 flex items-center gap-3',
-            locationStatus === 'inside' ? 'border-emerald-200 bg-emerald-50' :
-            locationStatus === 'outside' ? 'border-emerald-200 bg-emerald-50/50' :
-            'border-slate-200'
+            locationStatus === 'inside' ? 'border-emerald-200 dark:border-slate-700 bg-emerald-50 dark:bg-emerald-900/30' :
+            locationStatus === 'outside' ? 'border-amber-200 bg-amber-50/50' :
+            'border-emerald-200 dark:border-slate-700'
           )}>
             <div className={cn(
               'w-10 h-10 rounded-lg flex items-center justify-center',
-              locationStatus === 'inside' ? 'bg-emerald-100' : 'bg-slate-100'
+              locationStatus === 'inside' ? 'bg-emerald-100' : locationStatus === 'outside' ? 'bg-amber-100' : 'bg-slate-100 dark:bg-slate-800'
             )}>
-              <Navigation className={cn('w-5 h-5', locationStatus === 'inside' ? 'text-emerald-600' : 'text-slate-500')} />
+              <Navigation className={cn('w-5 h-5', locationStatus === 'inside' ? 'text-emerald-600' : locationStatus === 'outside' ? 'text-amber-600' : 'text-slate-500 dark:text-slate-400')} />
             </div>
             <div className="flex-1">
-              <p className={cn('text-sm font-medium', locationStatus === 'inside' ? 'text-emerald-800' : 'text-slate-700')}>
+              <p className={cn('text-sm font-medium', locationStatus === 'inside' ? 'text-emerald-800' : locationStatus === 'outside' ? 'text-amber-800' : 'text-slate-700 dark:text-slate-300')}>
                 {locationStatus === 'inside' ? 'You are within the campus area' :
                  locationStatus === 'outside' ? 'You appear to be outside campus' :
                  locationStatus === 'denied' ? 'Location access denied' :
                  locationStatus === 'checking' ? 'Verifying your location...' : 'Location unavailable'}
               </p>
               {locationDistance !== null && (
-                <p className="text-xs text-slate-500">{locationDistance}m from campus center</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{locationDistance}m from campus center</p>
               )}
             </div>
-            {locationStatus === 'checking' && <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />}
+            {locationStatus === 'checking' && <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />}
             {locationStatus === 'inside' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-            {locationStatus === 'outside' && <AlertTriangle className="w-5 h-5 text-emerald-500" />}
+            {locationStatus === 'outside' && <AlertTriangle className="w-5 h-5 text-amber-500" />}
           </div>
 
           {/* Check-in Method Selection */}
           <div>
-            <h3 className="text-sm font-medium text-slate-700 mb-3">Select Verification Method</h3>
+            <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Select Verification Method</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <button
                 onClick={() => startVerification('face')}
@@ -404,13 +370,13 @@ export default function EventCheckIn() {
                 className={cn('card-hover p-5 text-left group', (!enrolledDescriptors && !enrollmentLoading) && 'opacity-60')}
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    {enrollmentLoading ? <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" /> : <ScanFace className="w-6 h-6 text-emerald-600" />}
+                  <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+                    {enrollmentLoading ? <Loader2 className="w-6 h-6 text-primary-400 animate-spin" /> : <ScanFace className="w-6 h-6 text-primary-600" />}
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-primary-500 transition-colors" />
                 </div>
-                <h4 className="text-sm font-semibold text-slate-900">Face Recognition</h4>
-                <p className="text-xs text-slate-500 mt-1">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Face Recognition</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {enrollmentLoading ? 'Loading enrollment data...' :
                    !enrolledDescriptors ? 'No approved enrollment found' :
                    'Verify using your enrolled facial data'}
@@ -421,13 +387,13 @@ export default function EventCheckIn() {
                 className="card-hover p-5 text-left group"
               >
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                    <CreditCard className="w-6 h-6 text-emerald-600" />
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                    <CreditCard className="w-6 h-6 text-orange-600" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-orange-500 transition-colors" />
                 </div>
-                <h4 className="text-sm font-semibold text-slate-900">RFID Scan</h4>
-                <p className="text-xs text-slate-500 mt-1">Tap your RFID-enabled student ID card</p>
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-white">RFID Scan</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Tap your RFID-enabled student ID card</p>
               </button>
             </div>
           </div>
@@ -436,7 +402,7 @@ export default function EventCheckIn() {
 
       {/* ── Step: Verify ── */}
       {step === 'verify' && selectedMethod === 'face' && (
-        <div className="max-w-lg mx-auto space-y-5">
+        <div className="p-6 space-y-5">
           <div className="relative bg-slate-900 rounded-xl overflow-hidden" style={{ aspectRatio: '4/3' }}>
             {cameraActive ? (
               <>
@@ -452,7 +418,7 @@ export default function EventCheckIn() {
               </>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 text-slate-500 animate-spin" />
+                <Loader2 className="w-8 h-8 text-slate-500 dark:text-slate-400 animate-spin" />
               </div>
             )}
           </div>
@@ -473,22 +439,22 @@ export default function EventCheckIn() {
             )}
           </div>
           {faceStatus === 'fail' && (
-            <div className="p-4 bg-emerald-50/50 border border-emerald-200 rounded-xl text-center">
-              <AlertTriangle className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-emerald-700">Face not recognized. Please try again or use RFID.</p>
+            <div className="p-4 bg-red-50/50 border border-red-200 rounded-xl text-center">
+              <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+              <p className="text-sm font-medium text-red-700">Face not recognized. Please try again or use RFID.</p>
             </div>
           )}
         </div>
       )}
 
       {step === 'verify' && selectedMethod === 'rfid' && (
-        <div className="max-w-md mx-auto space-y-6">
+        <div className="p-6 space-y-6">
           <div className="text-center">
-            <div className="w-20 h-20 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <CreditCard className="w-10 h-10 text-emerald-600" />
+            <div className="w-20 h-20 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-10 h-10 text-orange-600" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">Tap Your Student ID</h3>
-            <p className="text-sm text-slate-500 mt-1">Place your RFID-enabled ID card near the reader</p>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Tap Your Student ID</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Place your RFID-enabled ID card near the reader</p>
           </div>
           <form onSubmit={handleRFIDSubmit}>
             <div className="relative">
@@ -508,9 +474,9 @@ export default function EventCheckIn() {
             </button>
           </form>
           {rfidStatus === 'fail' && (
-            <div className="p-4 bg-emerald-50/50 border border-emerald-200 rounded-xl text-center">
-              <XCircle className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-emerald-700">RFID not recognized. Please try again.</p>
+            <div className="p-4 bg-red-50/50 border border-red-200 rounded-xl text-center">
+              <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+              <p className="text-sm font-medium text-red-700">RFID not recognized. Please try again.</p>
             </div>
           )}
           <button onClick={() => { setStep('info'); setRfidStatus('idle'); setRfidInput(''); }} className="btn-secondary w-full">
@@ -521,14 +487,14 @@ export default function EventCheckIn() {
 
       {/* ── Step: Result ── */}
       {step === 'result' && checkInResult && (
-        <div className="max-w-md mx-auto space-y-6">
+        <div className="p-6 space-y-6">
           <div className="card p-8 text-center space-y-4">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Check-In Successful!</h2>
-              <p className="text-sm text-slate-500 mt-1">{checkInResult.event}</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Check-In Successful!</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{checkInResult.event}</p>
               <span className={cn(
                 'inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide',
                 checkInResult.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
@@ -539,60 +505,59 @@ export default function EventCheckIn() {
               </span>
             </div>
 
-            <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-3 text-sm">
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-emerald-200 dark:border-slate-700 p-4 space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Method</span>
-                <span className="font-medium text-slate-900 flex items-center gap-1.5">
+                <span className="text-slate-500 dark:text-slate-400">Method</span>
+                <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1.5">
                   {checkInResult.method === 'face' ? <ScanFace className="w-4 h-4 text-emerald-600" /> : <CreditCard className="w-4 h-4 text-emerald-600" />}
                   {checkInResult.method === 'face' ? 'Face Recognition' : 'RFID'}
                 </span>
               </div>
               {checkInResult.score && (
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Confidence</span>
+                  <span className="text-slate-500 dark:text-slate-400">Confidence</span>
                   <span className="font-medium text-emerald-600">{checkInResult.score}%</span>
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Status</span>
+                <span className="text-slate-500 dark:text-slate-400">Status</span>
                 <span className={cn(
                   'font-medium capitalize',
                   checkInResult.status === 'present' ? 'text-emerald-600' :
-                  checkInResult.status === 'late' ? 'text-amber-600' : 'text-red-600'
+                  checkInResult.status === 'late' ? 'text-amber-600' : 'text-red-600 dark:text-red-400'
                 )}>
                   {checkInResult.status}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Location</span>
-                <span className={cn('font-medium flex items-center gap-1', checkInResult.location === 'inside' ? 'text-emerald-600' : 'text-slate-600')}>
+                <span className="text-slate-500 dark:text-slate-400">Location</span>
+                <span className={cn('font-medium flex items-center gap-1', checkInResult.location === 'inside' ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-300')}>
                   <MapPin className="w-3.5 h-3.5" />
                   {checkInResult.location === 'inside' ? 'On Campus' : checkInResult.location === 'outside' ? 'Off Campus' : 'Unknown'}
                   {checkInResult.distance !== null && ` (${checkInResult.distance}m)`}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Time</span>
-                <span className="font-medium text-slate-900 flex items-center gap-1">
+                <span className="text-slate-500 dark:text-slate-400">Time</span>
+                <span className="font-medium text-slate-900 dark:text-white flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
                   {new Date(checkInResult.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
 
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2">
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-slate-700 rounded-lg flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
               <p className="text-xs text-emerald-700">Your attendance has been securely recorded and verified.</p>
             </div>
           </div>
 
-          <Link to="/student/events" className="btn-secondary w-full flex items-center justify-center gap-2 text-sm">
-            Back to Events
-          </Link>
+          <button onClick={onClose} className="btn-secondary w-full flex items-center justify-center gap-2 text-sm">
+            Close
+          </button>
         </div>
       )}
-        </>
-      )}
-    </div>
+      </div>
+    </Modal>
   );
 }

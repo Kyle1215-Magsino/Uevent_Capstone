@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Modal } from '../ui';
 import { cn, getInitials } from '../../lib/utils';
 import {
@@ -22,8 +23,8 @@ import {
   Shield,
   Bell,
   CreditCard,
-  MapPinCheck,
-  Radio,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 const adminNav = [
@@ -39,7 +40,6 @@ const adminNav = [
 const organizerNav = [
   { name: 'Dashboard', href: '/organizer', icon: LayoutDashboard },
   { name: 'My Events', href: '/organizer/events', icon: Calendar },
-  { name: 'Check-In Station', href: '/organizer/checkin', icon: Radio },
   { name: 'Attendance', href: '/organizer/attendance', icon: ClipboardCheck },
   { name: 'Reports', href: '/organizer/reports', icon: FileText },
 ];
@@ -47,7 +47,6 @@ const organizerNav = [
 const studentNav = [
   { name: 'Dashboard', href: '/student', icon: LayoutDashboard },
   { name: 'Events', href: '/student/events', icon: Calendar },
-  { name: 'Event Check-In', href: '/student/events', icon: MapPinCheck },
   { name: 'Facial Enrollment', href: '/student/enrollment', icon: ScanFace },
   { name: 'My Attendance', href: '/student/attendance', icon: History },
 ];
@@ -72,15 +71,16 @@ function getRoleLabel(role) {
 
 function getRoleColor(role) {
   switch (role) {
-    case 'admin': return 'bg-emerald-100 text-emerald-700';
-    case 'organizer': return 'bg-emerald-100 text-emerald-700';
-    case 'student': return 'bg-emerald-100 text-emerald-700';
-    default: return 'bg-slate-100 text-slate-700';
+    case 'admin': return 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300';
+    case 'organizer': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
+    case 'student': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+    default: return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
   }
 }
 
 export default function AppLayout({ children }) {
   const { user, logout } = useAuth();
+  const { dark, toggle: toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -113,7 +113,7 @@ export default function AppLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-900">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -125,15 +125,15 @@ export default function AppLayout({ children }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-[260px] bg-emerald-800 transform transition-transform duration-300 ease-out lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-[160px] bg-emerald-800 transform transition-transform duration-300 ease-out lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-emerald-700/60">
-          <img src="/usg.png" alt="U-EventTrack" className="w-9 h-9 object-contain" />
+        <div className="flex items-center gap-2 px-3 h-14 border-b border-white/10">
+          <img src="/usg.png" alt="U-EventTrack" className="w-7 h-7 object-contain" />
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">U-EventTrack</h1>
+            <h1 className="text-sm font-bold text-white tracking-tight">U-EventTrack</h1>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -144,7 +144,7 @@ export default function AppLayout({ children }) {
         </div>
 
         {/* Role Badge */}
-        <div className="px-5 py-3">
+        <div className="px-3 py-2">
           <span className="badge text-xs font-semibold bg-emerald-700/60 text-emerald-100">
             <Shield className="w-3 h-3 mr-1.5" />
             {getRoleLabel(user?.role)}
@@ -163,7 +163,7 @@ export default function AppLayout({ children }) {
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                  'flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium transition-all duration-150',
                   isActive
                     ? 'bg-white/15 text-white shadow-sm'
                     : 'text-emerald-200 hover:bg-white/10 hover:text-white'
@@ -177,33 +177,33 @@ export default function AppLayout({ children }) {
         </nav>
 
         {/* Bottom user info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-emerald-700/60">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/15 text-white flex items-center justify-center text-xs font-bold">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/10">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-white/15 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
               {getInitials(user?.name || 'U')}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-              <p className="text-xs text-emerald-300 truncate">{user?.email}</p>
+              <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
+              <p className="text-[10px] text-emerald-300 truncate">{user?.email}</p>
             </div>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="lg:pl-[260px]">
+      <div className="lg:pl-[160px]">
         {/* Top Navbar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-emerald-200/60 dark:bg-slate-800/80 dark:border-slate-700/60">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="lg:hidden p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors dark:hover:text-slate-300 dark:hover:bg-slate-700"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             <div className="hidden lg:block">
-              <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
+              <h2 className="text-lg font-semibold text-slate-900 tracking-tight dark:text-white">
                 {navItems.find(
                   (item) =>
                     location.pathname === item.href ||
@@ -213,17 +213,26 @@ export default function AppLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Dark mode toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors dark:hover:text-slate-300 dark:hover:bg-slate-700"
+                title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+
               {/* Notifications */}
-              <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+              <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors dark:hover:text-slate-300 dark:hover:bg-slate-700">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-800" />
               </button>
 
               {/* Profile Dropdown */}
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors dark:hover:bg-slate-700"
                 >
                   <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">
                     {getInitials(user?.name || 'U')}
@@ -232,16 +241,16 @@ export default function AppLayout({ children }) {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200/80 rounded-2xl shadow-card py-1 z-50 animate-scale-in">
-                    <div className="px-4 py-3 border-b border-slate-100">
-                      <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{user?.email}</p>
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-emerald-200/80 rounded-2xl shadow-card py-1 z-50 animate-scale-in dark:bg-slate-800 dark:border-slate-700">
+                    <div className="px-4 py-3 border-b border-emerald-100 dark:border-slate-700">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{user?.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">{user?.email}</p>
                     </div>
                     <div className="py-1">
                       <Link
                         to={`/${user?.role}/profile`}
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
                       >
                         <UserCircle className="w-4 h-4 text-slate-400" />
                         Profile
@@ -249,16 +258,16 @@ export default function AppLayout({ children }) {
                       <Link
                         to={`/${user?.role}/settings`}
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
                       >
                         <Settings className="w-4 h-4 text-slate-400" />
                         Settings
                       </Link>
                     </div>
-                    <div className="border-t border-slate-100 py-1">
+                    <div className="border-t border-emerald-100 py-1 dark:border-slate-700">
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 transition-colors"
+                        className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors dark:text-red-400 dark:hover:bg-red-900/20"
                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out
@@ -278,12 +287,12 @@ export default function AppLayout({ children }) {
       {/* Logout Confirmation Modal */}
       <Modal open={logoutModalOpen} onClose={() => setLogoutModalOpen(false)} title="Sign Out" size="sm">
         <div className="text-center space-y-4">
-          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-            <LogOut className="w-7 h-7 text-red-600" />
+          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto dark:bg-red-900/30">
+            <LogOut className="w-7 h-7 text-red-600 dark:text-red-400" />
           </div>
           <div>
-            <h4 className="text-lg font-semibold text-slate-900">Are you sure you want to sign out?</h4>
-            <p className="text-sm text-slate-500 mt-1">You will need to log in again to access your account.</p>
+            <h4 className="text-lg font-semibold text-slate-900 dark:text-white">Are you sure you want to sign out?</h4>
+            <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">You will need to log in again to access your account.</p>
           </div>
           <div className="flex gap-3 justify-center pt-2">
             <button

@@ -92,17 +92,19 @@ class DatabaseSeeder extends Seeder
         }
 
         // ── Facial enrollments ──
-        foreach ($allStudents->take(15) as $student) {
-            FacialEnrollment::factory()->create([
+        // Approved enrollments (with face_data) for some students
+        foreach ($allStudents->take(10) as $student) {
+            FacialEnrollment::factory()->approved()->create([
                 'user_id' => $student->id,
-                'reviewed_by' => rand(0, 1) ? $admin->id : null,
+                'reviewed_by' => $admin->id,
             ]);
         }
 
-        // A few pending ones
-        foreach ($allStudents->slice(15, 5) as $student) {
+        // Pending enrollments (no face_data yet — awaiting admin review)
+        foreach ($allStudents->slice(10, 10) as $student) {
             FacialEnrollment::factory()->pending()->create([
                 'user_id' => $student->id,
+                'reviewed_by' => rand(0, 1) ? $admin->id : null,
             ]);
         }
     }

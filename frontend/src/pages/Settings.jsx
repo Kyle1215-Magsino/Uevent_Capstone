@@ -63,8 +63,8 @@ export default function Settings() {
       <form onSubmit={handleSave} className="max-w-3xl mx-auto space-y-6">
         {/* Notification Preferences */}
         <div className="card p-6 space-y-5">
-          <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-emerald-600" />Notification Preferences
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <Bell className="w-4 h-4 text-amber-600" />Notification Preferences
           </h3>
           <div className="space-y-3">
             {[
@@ -75,15 +75,15 @@ export default function Settings() {
             ].map((item) => (
               <div key={item.key} className="flex items-center justify-between py-2">
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{item.label}</p>
-                  <p className="text-xs text-slate-500">{item.desc}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{item.label}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => toggleNotification(item.key)}
                   className={cn(
                     'w-11 h-6 rounded-full transition-colors duration-200 relative',
-                    notifications[item.key] ? 'bg-emerald-500' : 'bg-slate-300'
+                    notifications[item.key] ? 'bg-primary-500' : 'bg-slate-300'
                   )}
                 >
                   <span className={cn(
@@ -99,15 +99,15 @@ export default function Settings() {
         {/* Geofence Configuration (Admin only) */}
         {isAdmin && (
           <div className="card p-6 space-y-5">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-emerald-600" />Campus Geofence Configuration
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-rose-600" />Campus Geofence Configuration
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Configure the campus geofence to restrict check-in to within the campus boundary.
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Latitude</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Latitude</label>
                 <input
                   type="text"
                   value={geofence.latitude}
@@ -116,7 +116,7 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Longitude</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Longitude</label>
                 <input
                   type="text"
                   value={geofence.longitude}
@@ -125,7 +125,7 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Radius (meters)</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Radius (meters)</label>
                 <input
                   type="number"
                   value={geofence.radius}
@@ -138,15 +138,15 @@ export default function Settings() {
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
-                <p className="text-sm font-medium text-slate-900">Enforce Geofence</p>
-                <p className="text-xs text-slate-500">Require location verification during check-in</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">Enforce Geofence</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Require location verification during check-in</p>
               </div>
               <button
                 type="button"
                 onClick={() => setGeofence((p) => ({ ...p, enabled: !p.enabled }))}
                 className={cn(
                   'w-11 h-6 rounded-full transition-colors duration-200 relative',
-                  geofence.enabled ? 'bg-emerald-500' : 'bg-slate-300'
+                  geofence.enabled ? 'bg-primary-500' : 'bg-slate-300'
                 )}
               >
                 <span className={cn(
@@ -161,11 +161,11 @@ export default function Settings() {
         {/* Attendance Methods (Admin only) */}
         {isAdmin && (
           <div className="card p-6 space-y-5">
-            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-emerald-600" />Attendance Configuration
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Shield className="w-4 h-4 text-violet-600" />Attendance Configuration
             </h3>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Default Attendance Method</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Default Attendance Method</label>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { value: 'face_recognition', label: 'Face Recognition', icon: ScanFace },
@@ -179,15 +179,15 @@ export default function Settings() {
                     className={cn(
                       'border-2 rounded-xl p-3 text-center transition-all',
                       attendance.defaultMethod === method.value
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-emerald-800 bg-primary-50'
+                        : 'border-emerald-200 dark:border-slate-700 hover:border-emerald-300'
                     )}
                   >
                     <method.icon className={cn(
                       'w-6 h-6 mx-auto mb-1',
-                      attendance.defaultMethod === method.value ? 'text-emerald-600' : 'text-slate-400'
+                      attendance.defaultMethod === method.value ? 'text-primary-600' : 'text-slate-400'
                     )} />
-                    <p className="text-xs font-medium text-slate-900">{method.label}</p>
+                    <p className="text-xs font-medium text-slate-900 dark:text-white">{method.label}</p>
                   </button>
                 ))}
               </div>
@@ -201,15 +201,15 @@ export default function Settings() {
               ].map((item) => (
                 <div key={item.key} className="flex items-center justify-between py-2">
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{item.label}</p>
-                    <p className="text-xs text-slate-500">{item.desc}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">{item.label}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setAttendance((p) => ({ ...p, [item.key]: !p[item.key] }))}
                     className={cn(
                       'w-11 h-6 rounded-full transition-colors duration-200 relative',
-                      attendance[item.key] ? 'bg-emerald-500' : 'bg-slate-300'
+                      attendance[item.key] ? 'bg-primary-500' : 'bg-slate-300'
                     )}
                   >
                     <span className={cn(

@@ -298,27 +298,27 @@ export default function FacialEnrollment() {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">Enrollment Active</h3>
-          <p className="text-sm text-slate-500 mt-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Enrollment Active</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
             Your facial data has been approved and is active for event check-in verification.
           </p>
-          <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-emerald-200 dark:border-slate-700">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-slate-500">Status</p>
+                <p className="text-slate-500 dark:text-slate-400">Status</p>
                 <p className="font-medium text-emerald-600">Approved</p>
               </div>
               <div>
-                <p className="text-slate-500">Descriptors</p>
-                <p className="font-medium text-slate-900">{DESCRIPTOR_GOAL} samples</p>
+                <p className="text-slate-500 dark:text-slate-400">Descriptors</p>
+                <p className="font-medium text-slate-900 dark:text-white">{DESCRIPTOR_GOAL} samples</p>
               </div>
               <div>
-                <p className="text-slate-500">Enrolled Date</p>
-                <p className="font-medium text-slate-900">Feb 15, 2026</p>
+                <p className="text-slate-500 dark:text-slate-400">Enrolled Date</p>
+                <p className="font-medium text-slate-900 dark:text-white">Feb 15, 2026</p>
               </div>
               <div>
-                <p className="text-slate-500">Last Used</p>
-                <p className="font-medium text-slate-900">Mar 3, 2026</p>
+                <p className="text-slate-500 dark:text-slate-400">Last Used</p>
+                <p className="font-medium text-slate-900 dark:text-white">Mar 3, 2026</p>
               </div>
             </div>
           </div>
@@ -331,8 +331,8 @@ export default function FacialEnrollment() {
   /* ── Progress bar color helper ────────────────────────────────── */
   const progressColor =
     scanStatus === 'done' ? 'bg-emerald-500' :
-    scanStatus === 'failed' ? 'bg-emerald-300' :
-    'bg-emerald-500';
+    scanStatus === 'failed' ? 'bg-red-400' :
+    'bg-primary-500';
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -354,19 +354,19 @@ export default function FacialEnrollment() {
                   <div
                     className={cn(
                       'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors',
-                      isActive && 'bg-emerald-600 text-white',
-                      isCompleted && 'bg-emerald-500 text-white',
-                      !isActive && !isCompleted && 'bg-slate-200 text-slate-500',
+                      isActive && 'bg-primary-600 text-white',
+                      isCompleted && 'bg-primary-500 text-white',
+                      !isActive && !isCompleted && 'bg-slate-200 text-slate-500 dark:text-slate-400',
                     )}
                   >
                     {isCompleted ? <CheckCircle className="w-4 h-4" /> : stepNum}
                   </div>
-                  <span className={cn('text-sm font-medium hidden sm:block', isActive ? 'text-emerald-700' : 'text-slate-500')}>
+                  <span className={cn('text-sm font-medium hidden sm:block', isActive ? 'text-primary-700' : 'text-slate-500 dark:text-slate-400')}>
                     {label}
                   </span>
                 </div>
                 {i < 2 && (
-                  <div className={cn('w-16 sm:w-24 h-0.5 mx-2', step > stepNum ? 'bg-emerald-500' : 'bg-slate-200')} />
+                  <div className={cn('w-16 sm:w-24 h-0.5 mx-2', step > stepNum ? 'bg-primary-500' : 'bg-slate-200')} />
                 )}
               </div>
             );
@@ -378,22 +378,22 @@ export default function FacialEnrollment() {
       {step === 1 && (
         <div className="card p-8 max-w-2xl mx-auto">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ScanFace className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ScanFace className="w-8 h-8 text-violet-600" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900">Facial Recognition Enrollment</h3>
-            <p className="text-sm text-slate-500 mt-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Facial Recognition Enrollment</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
               We'll use AI-powered video scanning to capture your facial data for automated event attendance.
             </p>
           </div>
 
           <div className="space-y-4 mb-8">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-blue-800 flex items-center gap-2">
                 <Video className="w-4 h-4" />
                 How It Works
               </h4>
-              <ul className="mt-2 text-sm text-emerald-700 space-y-1.5 list-disc list-inside">
+              <ul className="mt-2 text-sm text-blue-700 space-y-1.5 list-disc list-inside">
                 <li>Your webcam opens and streams a live video feed</li>
                 <li>Face-API detects and tracks your face in real time</li>
                 <li>The system automatically captures {DESCRIPTOR_GOAL} facial descriptors over {SCAN_DURATION_SEC} seconds</li>
@@ -402,12 +402,12 @@ export default function FacialEnrollment() {
               </ul>
             </div>
 
-            <div className="bg-emerald-50/60 border border-emerald-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+            <div className="bg-primary-50/60 border border-emerald-200 dark:border-slate-700 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-primary-800 flex items-center gap-2">
                 <Info className="w-4 h-4" />
                 Tips for Best Results
               </h4>
-              <ul className="mt-2 text-sm text-emerald-700 space-y-1.5 list-disc list-inside">
+              <ul className="mt-2 text-sm text-primary-700 space-y-1.5 list-disc list-inside">
                 <li>Use a well-lit room — avoid backlighting</li>
                 <li>Remove sunglasses, hats, or face coverings</li>
                 <li>Look directly at the camera, then slowly tilt your head</li>
@@ -415,12 +415,12 @@ export default function FacialEnrollment() {
               </ul>
             </div>
 
-            <div className="bg-emerald-50/40 border border-emerald-200 rounded-lg p-4">
-              <h4 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+            <div className="bg-blue-50/40 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-blue-800 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 Privacy Notice
               </h4>
-              <p className="mt-1 text-sm text-emerald-700">
+              <p className="mt-1 text-sm text-blue-700">
                 Your facial data is securely stored as numerical descriptors and used solely for event attendance.
                 You can request deletion at any time.
               </p>
@@ -430,7 +430,7 @@ export default function FacialEnrollment() {
           <button
             onClick={beginScanStep}
             disabled={modelsLoading}
-            className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {modelsLoading ? (
               <>
@@ -452,30 +452,30 @@ export default function FacialEnrollment() {
         <div className="card p-8 max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Live Face Scan</h3>
-              <p className="text-sm text-slate-500">{scanMessage}</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Live Face Scan</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{scanMessage}</p>
             </div>
             <div className="flex items-center gap-2">
               {cameraState === 'active' && scanStatus === 'scanning' && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">
                   <CircleDot className="w-3 h-3 animate-pulse" />
                   Scanning
                 </span>
               )}
               {(cameraState === 'starting' || scanStatus === 'waiting') && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-primary-600 bg-primary-50 px-2.5 py-1 rounded-full">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Loading
                 </span>
               )}
               {scanStatus === 'done' && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
                   <CheckCircle className="w-3 h-3" />
                   Complete
                 </span>
               )}
               {scanStatus === 'failed' && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2.5 py-1 rounded-full">
                   <AlertTriangle className="w-3 h-3" />
                   Retry
                 </span>
@@ -515,7 +515,7 @@ export default function FacialEnrollment() {
                   <div className="absolute top-3 inset-x-3 flex items-center justify-between">
                     <span className={cn(
                       'text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm',
-                      faceDetected ? 'bg-emerald-500/80 text-white' : 'bg-slate-800/80 text-slate-300'
+                      faceDetected ? 'bg-primary-500/80 text-white' : 'bg-slate-800/80 text-slate-300'
                     )}>
                       {faceDetected ? '✓ Face Detected' : 'Searching for face…'}
                     </span>
@@ -547,8 +547,8 @@ export default function FacialEnrollment() {
               </>
             ) : cameraState === 'denied' ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                  <VideoOff className="w-7 h-7 text-emerald-400" />
+                <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center">
+                  <VideoOff className="w-7 h-7 text-amber-400" />
                 </div>
                 <h4 className="text-white font-semibold">Camera Access Denied</h4>
                 <p className="text-sm text-slate-400 text-center max-w-xs">
@@ -560,8 +560,8 @@ export default function FacialEnrollment() {
               </div>
             ) : cameraState === 'error' ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-7 h-7 text-emerald-400" />
+                <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-7 h-7 text-amber-400" />
                 </div>
                 <h4 className="text-white font-semibold">Camera Unavailable</h4>
                 <p className="text-sm text-slate-400 text-center max-w-xs">
@@ -573,7 +573,7 @@ export default function FacialEnrollment() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full gap-3 p-6">
-                <Loader2 className="w-10 h-10 text-slate-500 animate-spin" />
+                <Loader2 className="w-10 h-10 text-slate-500 dark:text-slate-400 animate-spin" />
                 <p className="text-slate-400 text-sm">Initializing…</p>
               </div>
             )}
@@ -581,11 +581,11 @@ export default function FacialEnrollment() {
 
           {/* Progress Bar */}
           <div className="mb-6">
-            <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
               <span>Scan progress</span>
               <span>{Math.round(scanProgress)}%</span>
             </div>
-            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
               <div
                 className={cn('h-full rounded-full transition-all duration-300', progressColor)}
                 style={{ width: `${scanProgress}%` }}
@@ -600,7 +600,7 @@ export default function FacialEnrollment() {
                 key={i}
                 className={cn(
                   'flex-1 h-2 rounded-full transition-all duration-500',
-                  i < descriptorsCollected ? 'bg-emerald-500' : 'bg-slate-200',
+                  i < descriptorsCollected ? 'bg-primary-500' : 'bg-slate-200',
                 )}
               />
             ))}
@@ -609,17 +609,17 @@ export default function FacialEnrollment() {
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
             {scanStatus === 'done' ? (
-              <button onClick={handleSubmit} className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200">
+              <button onClick={handleSubmit} className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-200">
                 <Upload className="w-4 h-4" />
                 Submit Enrollment
               </button>
             ) : scanStatus === 'failed' ? (
-              <button onClick={handleRetry} className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200">
+              <button onClick={handleRetry} className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-200">
                 <RotateCcw className="w-4 h-4" />
                 Retry Scan
               </button>
             ) : (
-              <button disabled className="flex-1 flex items-center justify-center gap-2 bg-emerald-400 text-white px-4 py-2.5 rounded-xl font-semibold text-sm opacity-50 cursor-not-allowed">
+              <button disabled className="flex-1 flex items-center justify-center gap-2 bg-primary-400 text-white px-4 py-2.5 rounded-xl font-semibold text-sm opacity-50 cursor-not-allowed">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Scanning…
               </button>
@@ -639,22 +639,22 @@ export default function FacialEnrollment() {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-8 h-8 text-emerald-600" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">Enrollment Submitted!</h3>
-          <p className="text-sm text-slate-500 mt-2">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Enrollment Submitted!</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
             Your facial scan data ({DESCRIPTOR_GOAL} descriptors) has been submitted for review.
             An administrator will verify and approve your enrollment.
           </p>
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-emerald-200 dark:border-slate-700 text-sm">
               <p className="text-slate-400 text-xs">Descriptors</p>
-              <p className="font-semibold text-slate-900">{DESCRIPTOR_GOAL} captured</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{DESCRIPTOR_GOAL} captured</p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-emerald-200 dark:border-slate-700 text-sm">
               <p className="text-slate-400 text-xs">Method</p>
-              <p className="font-semibold text-slate-900">Video Scan</p>
+              <p className="font-semibold text-slate-900 dark:text-white">Video Scan</p>
             </div>
           </div>
-          <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-slate-700 rounded-lg">
             <p className="text-sm text-emerald-800 flex items-center gap-2">
               <Info className="w-4 h-4" />
               Estimated approval time: 24-48 hours

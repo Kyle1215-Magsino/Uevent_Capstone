@@ -79,10 +79,10 @@ export default function LiveDashboard() {
   const fillRate = capacity > 0 ? ((totalCheckins / capacity) * 100).toFixed(1) : '0.0';
 
   const methodIcon = {
-    facial: <ScanFace className="w-4 h-4 text-emerald-600" />,
-    face: <ScanFace className="w-4 h-4 text-emerald-600" />,
-    rfid: <CreditCard className="w-4 h-4 text-emerald-600" />,
-    manual: <ClipboardList className="w-4 h-4 text-slate-600" />,
+    facial: <ScanFace className="w-4 h-4 text-violet-600" />,
+    face: <ScanFace className="w-4 h-4 text-violet-600" />,
+    rfid: <CreditCard className="w-4 h-4 text-orange-600" />,
+    manual: <ClipboardList className="w-4 h-4 text-slate-600 dark:text-slate-300" />,
   };
 
   const methodLabel = {
@@ -96,8 +96,8 @@ export default function LiveDashboard() {
     return (
       <div className="space-y-8 animate-fade-in">
         <div className="card p-12 text-center">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-500">Loading live dashboard...</p>
+          <Loader2 className="w-8 h-8 text-primary-500 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500 dark:text-slate-400">Loading live dashboard...</p>
         </div>
       </div>
     );
@@ -108,7 +108,7 @@ export default function LiveDashboard() {
       <div className="space-y-8 animate-fade-in">
         <div className="card p-12 text-center">
           <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <p className="text-sm text-red-600 font-medium">{error || 'Event not found.'}</p>
+          <p className="text-sm text-red-600 dark:text-red-400 font-medium">{error || 'Event not found.'}</p>
           <Link to="/" className="btn-secondary mt-4 inline-flex">Go Back</Link>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function LiveDashboard() {
               onClick={() => setIsLive(!isLive)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
               )}
             >
               <Radio className={cn('w-4 h-4', isLive && 'animate-pulse')} />
@@ -146,7 +146,7 @@ export default function LiveDashboard() {
           title="Total Check-ins"
           value={totalCheckins}
           icon={ClipboardCheck}
-          iconColor="primary"
+          iconColor="emerald"
         />
         <StatsCard
           title="Present"
@@ -158,31 +158,31 @@ export default function LiveDashboard() {
           title="Late"
           value={lateCount}
           icon={AlertTriangle}
-          iconColor="emerald"
+          iconColor="amber"
         />
         <StatsCard
           title="Fill Rate"
           value={`${fillRate}%`}
           icon={Gauge}
-          iconColor="emerald"
+          iconColor="amber"
         />
         <StatsCard
           title="Remaining"
           value={remaining}
           icon={UserMinus}
-          iconColor="emerald"
+          iconColor="violet"
         />
       </div>
 
       {/* Progress Bar */}
       <div className="card p-5">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-slate-700">Attendance Progress</span>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Attendance Progress</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">
             {totalCheckins} / {capacity}
           </span>
         </div>
-        <div className="w-full bg-slate-100 rounded-full h-4">
+        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-4">
           <div
             className="bg-primary-500 h-4 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(parseFloat(fillRate), 100)}%` }}
@@ -196,7 +196,7 @@ export default function LiveDashboard() {
             return (
               <div key={method} className="flex items-center gap-2">
                 {methodIcon[method] || methodIcon.manual}
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-slate-600 dark:text-slate-300">
                   {methodLabel[method] || method}: <strong>{count}</strong>
                 </span>
               </div>
@@ -207,9 +207,9 @@ export default function LiveDashboard() {
 
       {/* Live Feed */}
       <div className="card">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-emerald-100 dark:border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-slate-900">Live Check-in Feed</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white">Live Check-in Feed</h3>
             {isLive && (
               <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -222,13 +222,13 @@ export default function LiveDashboard() {
           </div>
         </div>
 
-        <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+        <div className="divide-y divide-emerald-100 max-h-[500px] overflow-y-auto">
           {filtered.map((attendee, i) => (
             <div
               key={attendee.id}
               className={cn(
                 'px-6 py-3 flex items-center justify-between hover:bg-primary-50/30 transition-colors',
-                i === 0 && isLive && 'bg-emerald-50'
+                i === 0 && isLive && 'bg-primary-50'
               )}
             >
               <div className="flex items-center gap-3">
@@ -236,14 +236,14 @@ export default function LiveDashboard() {
                   {getInitials(attendee.name)}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{attendee.name}</p>
-                  <p className="text-xs text-slate-500">{attendee.student_id}</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{attendee.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{attendee.student_id}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   {methodIcon[attendee.method]}
-                  <span className="text-xs text-slate-500">{methodLabel[attendee.method]}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{methodLabel[attendee.method]}</span>
                 </div>
                 <span className={cn(
                   'text-xs font-semibold px-2 py-0.5 rounded-full capitalize',
