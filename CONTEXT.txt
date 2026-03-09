@@ -10,19 +10,22 @@ It supports three user roles — Admin, Organizer, and Student — and offers th
 check-in methods: Facial Recognition (face-api.js), RFID, and Manual entry.
 
 The system covers the complete event lifecycle: creation, scheduling, real-time
-attendance monitoring, facial enrollment, and post-event reporting with analytics.
+attendance monitoring, facial enrollment, GPS geofencing, and post-event
+reporting with analytics.
 
 
 TECH STACK
 ────────────────
-  Frontend:   React 19 + Vite + Tailwind CSS
+  Frontend:   React 19.2.0 + Vite 7.3.1 + Tailwind CSS 3.4.19
   Backend:    Laravel 12 (PHP 8.2+)
   Database:   MySQL (database name: capstone_Uevent)
   Auth:       Laravel Sanctum (bearer tokens)
-  Face AI:    face-api.js (TinyFaceDetector + FaceRecognitionNet, 128-D descriptors)
-  Charts:     Recharts
-  HTTP:       Axios (with token interceptor & 401 auto-logout)
-  Icons:      Lucide React
+  Face AI:    face-api.js 0.22.2 (TinyFaceDetector + FaceRecognitionNet, 128-D)
+  Charts:     Recharts 3.7.0
+  HTTP:       Axios 1.13.6 (with token interceptor & 401 auto-logout)
+  Icons:      Lucide React 0.576.0
+  Routing:    React Router 7.13
+  Toasts:     react-hot-toast 2.6.0
 
 
 FOLDER STRUCTURE
@@ -80,6 +83,9 @@ U-event/
 │   │   │   ├── Profile.jsx
 │   │   │   ├── Settings.jsx
 │   │   │   ├── NotFound.jsx
+│   │   │   ├── auth/
+│   │   │   │   ├── Login.jsx       ← Redirect to Landing with login modal
+│   │   │   │   └── Register.jsx    ← Redirect to Landing with register modal
 │   │   │   ├── admin/
 │   │   │   │   ├── Dashboard.jsx
 │   │   │   │   ├── UserManagement.jsx
@@ -91,16 +97,16 @@ U-event/
 │   │   │   │   └── RFIDManagement.jsx
 │   │   │   ├── organizer/
 │   │   │   │   ├── Dashboard.jsx
-│   │   │   │   ├── CreateEvent.jsx
+│   │   │   │   ├── CreateEvent.jsx ← Redirect to ManageEvents
 │   │   │   │   ├── ManageEvents.jsx
 │   │   │   │   ├── AttendanceMonitor.jsx
-│   │   │   │   ├── CheckInStation.jsx
+│   │   │   │   ├── CheckInStation.jsx  ← Modal (opened from ManageEvents)
 │   │   │   │   ├── LiveDashboard.jsx
 │   │   │   │   └── Reports.jsx
 │   │   │   └── student/
 │   │   │       ├── Dashboard.jsx
 │   │   │       ├── Events.jsx
-│   │   │       ├── EventCheckIn.jsx
+│   │   │       ├── EventCheckIn.jsx    ← Modal (opened from Events)
 │   │   │       ├── FacialEnrollment.jsx
 │   │   │       └── AttendanceHistory.jsx
 │   │   ├── routes/
@@ -150,9 +156,9 @@ Public:
 Authenticated (all roles):
   GET  /api/user                              → Current user info
   POST /api/logout                            → Revoke token
-  GET  /api/events                            → List events
+  GET  /api/events                            → List events (role-filtered)
   GET  /api/events/upcoming                   → Upcoming events
-  GET  /api/events/{id}                       → Event detail
+  GET  /api/events/{id}                       → Event detail with counts
   GET  /api/my-attendance                     → My attendance records
 
 Check-in (student, organizer, admin):
@@ -197,6 +203,50 @@ Admin only:
   GET  /api/students/{id}/attendance          → Student attendance (admin view)
 
 
+FRONTEND ROUTES (frontend/src/App.jsx)
+────────────────
+Public:
+  /                → Landing page (login/register modals; redirects to /{role} if logged in)
+  /login           → Redirects to / with login modal state
+  /register        → Redirects to / with register modal state
+
+Admin (/admin/...):
+  /admin           → Dashboard
+  /admin/users     → User Management
+  /admin/events    → Event Monitoring
+  /admin/events/:id      → Event Detail
+  /admin/events/:id/live → Live Dashboard
+  /admin/reports   → Reports
+  /admin/analytics → Analytics
+  /admin/enrollments → Facial Enrollments
+  /admin/rfid      → RFID Management
+  /admin/profile   → Profile
+  /admin/settings  → Settings
+
+Organizer (/organizer/...):
+  /organizer               → Dashboard
+  /organizer/events/create → Redirects to /organizer/events
+  /organizer/events        → Manage Events (CRUD + CheckInStation modal)
+  /organizer/events/:id/live → Live Dashboard
+  /organizer/attendance    → Attendance Monitor
+  /organizer/reports       → Reports
+  /organizer/profile       → Profile
+  /organizer/settings      → Settings
+
+Student (/student/...):
+  /student            → Dashboard
+  /student/events     → Browse Events (+ EventCheckIn modal)
+  /student/enrollment → Facial Enrollment (3-step wizard)
+  /student/attendance → Attendance History
+  /student/profile    → Profile
+  /student/settings   → Settings
+
+Route Guards:
+  GuestRoute   → Redirects authenticated users to /{role} dashboard
+  RoleRoute    → Checks user.role against allowed roles; redirects wrong roles
+  ProtectedRoute → Redirects unauthenticated users to / with login modal state
+
+
 USER ROLES & PERMISSIONS
 ────────────────
 Admin
@@ -207,57 +257,383 @@ Admin
   - Monitor all events and attendance
 
 Organizer
-  - Create, edit, archive/restore own events
-  - Monitor attendance for own events (real-time)
+  - Create, edit, archive/restore own events (ownership enforced)
+  - Monitor attendance for own events (real-time live dashboard)
   - Operate check-in stations (face, RFID, manual)
   - Generate reports and export CSV for own events
 
 Student
   - View upcoming events and own attendance history
   - Submit facial enrollment (5 descriptors via webcam)
-  - Check in to events (face, RFID, or manual)
+  - Check in to events (face or RFID) with GPS verification
   - View own profile and enrollment status
 
 
-AUTHENTICATION FLOW
+SYSTEM FLOW — END TO END
 ────────────────
-1. Register: POST /api/register → creates user + returns Sanctum token
-2. Login:    POST /api/login    → validates credentials → returns token
-3. Token stored in localStorage, injected via Axios interceptor (Bearer header)
-4. On 401 response: token cleared, user redirected to landing page
-5. Logout:   POST /api/logout   → revokes current token server-side
+
+1. AUTHENTICATION FLOW
+   a. User opens / → Landing page displays hero + login/register modals
+   b. Register: POST /api/register (name, email, password, student_id, role)
+      → Backend creates user + Sanctum plainTextToken → returns { user, token }
+   c. Login: POST /api/login (email, password)
+      → Backend validates, revokes all previous tokens, creates new token
+      → returns { user, token }
+   d. Frontend stores token in localStorage as "auth_token"
+   e. Axios request interceptor attaches "Authorization: Bearer {token}" to all requests
+   f. Axios response interceptor on 401: clears token + user from localStorage,
+      redirects to /
+   g. On app load: AuthContext calls GET /api/user to restore session from stored token
+   h. Post-login: Navigate to /{user.role} (admin|organizer|student)
+   i. Logout: POST /api/logout → backend revokes all tokens → frontend clears storage
+
+2. FACIAL ENROLLMENT FLOW (Student)
+   a. Student navigates to /student/enrollment → FacialEnrollment.jsx
+   b. 3-step wizard: Instructions → Live Face Scan → Review & Submit
+   c. face-api.js models loaded from /models (TinyFaceDetector + FaceLandmark68Net
+      + FaceRecognitionNet)
+   d. 15-second webcam scan captures 5 face descriptors (128-D Float32Array each)
+      - Detection: TinyFaceDetector (inputSize: 320, scoreThreshold: 0.5)
+      - Canvas overlay shows bounding box + 68-point landmarks
+      - Video is mirrored for natural display
+   e. Descriptors submitted: POST /api/facial-enrollment
+      - Payload: { images_count: 5, face_data: JSON string of descriptor arrays }
+      - If existing non-rejected enrollment → 409; rejected enrollment → deleted first
+   f. Enrollment created with status "pending", submitted_at = now()
+   g. Admin reviews at /admin/enrollments:
+      - PATCH /api/facial-enrollments/{id}/approve → status="approved", reviewed_by, reviewed_at
+      - PATCH /api/facial-enrollments/{id}/reject  → status="rejected" + rejection_reason
+   h. Student can check status via GET /api/facial-enrollment/status or re-enroll after rejection
+
+3. EVENT MANAGEMENT FLOW (Organizer)
+   a. Organizer navigates to /organizer/events → ManageEvents.jsx
+   b. Create event: POST /api/events
+      - Required: title, date (≥ today), start_time, end_time, venue
+      - Optional: description, capacity, attendance_method (facial|rfid|manual|any), status
+      - organizer_id set automatically from auth user
+   c. Edit event: PUT /api/events/{id} (ownership enforced for organizer)
+   d. Status lifecycle: draft → upcoming → ongoing → completed
+                                  ↕ archive/restore
+                               archived
+   e. Archive: PATCH /api/events/{id}/archive → status = "archived"
+   f. Restore: PATCH /api/events/{id}/restore → status = "upcoming"
+   g. Bulk actions: POST /api/events/bulk-archive, POST /api/events/bulk-restore
+      - Organizer: scoped to own events only; admin: any events
+   h. Delete: DELETE /api/events/{id} (hard delete, ownership enforced)
+
+   Event listing by role:
+   - Admin: all events (excludes archived unless ?status=archived)
+   - Organizer: own events only (scopeByOrganizer)
+   - Student: all events (excludes archived unless filtered)
+   Search: ?search= filters by title or venue (LIKE)
+   Sort: date DESC, start_time DESC. Paginated (default 15/page)
+
+4. CHECK-IN FLOW — ORGANIZER CHECK-IN STATION
+   a. Organizer opens CheckInStation modal from ManageEvents for a specific event
+   b. GPS geofencing activates (navigator.geolocation.watchPosition):
+      - Campus center: lat 12.7478, lng 121.4732 (configurable)
+      - Radius: 500 meters
+      - Haversine formula calculates distance in real-time
+      - Status: "inside" (≤ 500m) | "outside" | "denied" | "unsupported"
+   c. Three check-in tabs:
+
+   Face Recognition tab:
+     i.   Load all enrolled faces: GET /api/enrolled-faces
+          → Returns approved enrollments with face_data + user info
+     ii.  Parse each enrollment's JSON face_data into faceapi.LabeledFaceDescriptors
+     iii. Create FaceMatcher(labeledDescriptors, threshold=0.6)
+     iv.  Start webcam + detection loop every 500ms (max 30 attempts = 15 seconds)
+          - TinyFaceDetector (inputSize: 320, scoreThreshold: 0.5)
+     v.   On match (distance < 0.6):
+          - confidence = Math.round((1 - bestMatch.distance) × 100)%
+          - POST /api/events/{id}/face-check-in { user_id }
+     vi.  No match after 30 attempts → timeout, retry option
+
+   RFID tab:
+     i.  User enters/scans student_id
+     ii. POST /api/events/{id}/rfid-check-in { student_id }
+         → Backend looks up User by student_id, returns 404 if not found
+
+   Manual tab:
+     i.  Enter student_id → same rfid-check-in endpoint
+
+   d. Recent check-in feed shows latest verified attendees
+
+5. CHECK-IN FLOW — STUDENT SELF CHECK-IN
+   a. Student opens EventCheckIn modal from /student/events for a specific event
+   b. 3-step flow: Info → Verify → Result
+   c. GPS geofencing check (getCurrentPosition, one-shot):
+      - Same campus center + 500m radius + haversine formula
+      - Must be within geofence to proceed
+   d. Face Recognition:
+      i.   Fetch own enrollment: GET /api/facial-enrollment/status
+      ii.  Parse own face_data into LabeledFaceDescriptors
+      iii. FaceMatcher([ownDescriptors], threshold=0.6)
+      iv.  Self-verification: matches live face against own enrolled data only
+      v.   On match: POST /api/events/{id}/face-check-in { user_id: self }
+   e. RFID:
+      i.  Enter student_id → POST /api/events/{id}/rfid-check-in { student_id }
+
+6. ATTENDANCE RECORDING (Backend — private recordAttendance method)
+   a. Duplicate check: if attendance record exists for event+user → 409 Conflict
+   b. Late determination: parse event.date + event.start_time + 15 minutes
+      - if now() > threshold → status = "late"
+      - else → status = "present"
+   c. Create Attendance record: event_id, user_id, check_in_time=now(), method, status
+   d. Return 201 with attendance record + loaded user
+
+   NOTE: Face matching is done CLIENT-SIDE in the browser via face-api.js.
+   The backend faceCheckIn endpoint receives a user_id and records the attendance
+   without server-side face verification. The face-api.js FaceMatcher on the
+   frontend performs the actual descriptor comparison (Euclidean distance < 0.6).
+
+7. LIVE DASHBOARD FLOW
+   a. Organizer/Admin navigates to /organizer/events/:id/live or /admin/events/:id/live
+   b. GET /api/events/{id}/live-dashboard called on mount + auto-refresh every 5 seconds
+   c. Returns:
+      - event (with present_count, late_count, absent_count, total_attendees)
+      - recent_checkins (last 20 with user info)
+      - method_breakdown (facial: N, rfid: N, manual: N)
+      - capacity_percentage (null if no capacity set)
+   d. Play/pause toggle to control auto-refresh; manual refresh button
+
+8. REPORTS & ANALYTICS FLOW
+   a. Event Report: GET /api/reports/events/{id}
+      → Returns event + organizer, attendees list, method breakdown
+   b. Attendance Report: GET /api/reports/attendance
+      → Cross-event records, filterable by date range (?from=, ?to=) and ?event_id=
+   c. CSV Export: GET /api/reports/events/{id}/export
+      → Streams CSV: Student Name, Email, Student ID, Check-in Time, Method, Status
+      → Chunked 200 rows at a time for memory efficiency
+   d. Admin Analytics Dashboard: GET /api/analytics/dashboard
+      → KPIs: total_users, total_students, total_organizers, total_events,
+        active_events, completed_events, total_attendance, pending_enrollments,
+        attendance_trend (last 30 days), events_by_status, recent_events (last 5)
+   e. Event Stats: GET /api/analytics/events → per-event present/late/absent counts
+   f. Attendance Stats: GET /api/analytics/attendance
+      → by_method, by_status, top_students (top 10), attendance_rates
+
+9. USER MANAGEMENT FLOW (Admin)
+   a. GET /api/users → paginated, filterable by ?role=, searchable by name/email/student_id
+   b. POST /api/users → create user (name, email, password, role, student_id)
+   c. PUT /api/users/{id} → update user (all fields optional, password stripped if empty)
+   d. PATCH /api/users/{id}/role → change role only
+   e. DELETE /api/users/{id} → hard delete
+
+10. DARK MODE
+    a. ThemeContext reads localStorage "theme" key on load
+    b. Falls back to system preference (prefers-color-scheme: dark)
+    c. Toggles document.documentElement.classList "dark" + colorScheme CSS property
+    d. Persists to localStorage on toggle
 
 
-FACIAL ENROLLMENT WORKFLOW
+API INTEGRATION STATUS (which pages use real API vs. mock data)
 ────────────────
-1. Student navigates to /student/enrollment
-2. face-api.js models loaded from /models directory (TinyFaceDetector + FaceRecognitionNet)
-3. 15-second webcam scan captures 5 face descriptors (128-D Float32Array each)
-4. Descriptors submitted to POST /api/facial-enrollment as JSON
-5. Enrollment created with status "pending"
-6. Admin reviews at /admin/enrollments → approves or rejects (with reason)
-7. Approved descriptors stored in face_data column for check-in matching
+Connected to real API (10 pages):
+  ✓ Landing                  → authAPI.login, authAPI.register
+  ✓ AppLayout                → AuthContext (logout, user info)
+  ✓ admin/EventMonitoring    → eventsAPI.getAll
+  ✓ admin/EventDetail        → eventsAPI.getById, attendanceAPI.getByEvent, reportsAPI.exportCSV
+  ✓ organizer/ManageEvents   → eventsAPI.* (full CRUD, bulk archive/restore)
+  ✓ organizer/LiveDashboard  → attendanceAPI.getLiveDashboard (5s auto-refresh)
+  ✓ organizer/CheckInStation → attendanceAPI.faceCheckIn/rfidCheckIn, enrollmentAPI.getEnrolledFaces
+  ✓ student/Events           → eventsAPI.getAll
+  ✓ student/EventCheckIn     → attendanceAPI.faceCheckIn/rfidCheckIn, enrollmentAPI.getStatus
+  ✓ student/FacialEnrollment → enrollmentAPI.enroll
+
+Using mock/hardcoded data (13 pages — need API integration):
+  ✗ Profile                  → mockProfile (only name/email/role from AuthContext)
+  ✗ Settings                 → setTimeout fake save, hardcoded toggles
+  ✗ admin/Dashboard          → mockStats, mockRecentEvents, mockRecentActivity
+  ✗ admin/UserManagement     → mockUsers (CRUD modals are no-ops)
+  ✗ admin/Reports            → mockReports, Recharts with static data
+  ✗ admin/Analytics          → hardcoded chart data (monthlyData, topEvents, etc.)
+  ✗ admin/Enrollments        → mockEnrollments (but has real face-api.js webcam verification)
+  ✗ admin/RFIDManagement     → mockStudents, mockStats
+  ✗ organizer/Dashboard      → mockStats, mockMyEvents
+  ✗ organizer/AttendanceMonitor → mockEvents, mockAttendees
+  ✗ organizer/Reports        → mockReports, Recharts with static data
+  ✗ student/Dashboard        → mockStats, mockUpcomingEvents, mockRecentAttendance
+  ✗ student/AttendanceHistory → mockAttendance
+
+Redirect stubs (3):
+  → auth/Login.jsx           → Navigate to / with { authModal: 'login' }
+  → auth/Register.jsx        → Navigate to / with { authModal: 'register' }
+  → organizer/CreateEvent.jsx → Navigate to /organizer/events
 
 
-CHECK-IN WORKFLOW
+BACKEND CONTROLLER DETAILS
 ────────────────
-Face Recognition:
-  - POST /api/events/{id}/face-check-in with descriptor
-  - Backend compares against all approved enrollments
-  - Euclidean distance threshold for matching
+AuthController:
+  register(Request)     → validates name/email/password(confirmed)/student_id/role
+                           creates user, issues Sanctum token "auth-token", returns 201
+  login(Request)        → validates email/password, Hash::check, revokes all existing
+                           tokens, creates new token, returns { user, token }
+  logout(Request)       → revokes all tokens for current user
+  user(Request)         → returns authenticated user object
 
-RFID:
-  - POST /api/events/{id}/rfid-check-in with student_id
-  - Looks up user by student_id field
+EventController:
+  index(Request)        → role-filtered: organizer=own, admin/student=all (excl archived)
+                           supports ?status=, ?search= (title|venue LIKE), paginated 15/page
+  upcoming()            → scopeUpcoming: date >= today, status in [upcoming, ongoing]
+  show(Event)           → loads attendance counts (present, late, absent, total)
+  store(Request)        → validates title, date ≥ today, times, venue, capacity, method, status
+  update(Request,Event) → ownership check for organizer, same validation
+  destroy(Request,Event)→ ownership check, hard delete
+  archive(Request,Event)→ ownership check, status → "archived"
+  restore(Request,Event)→ ownership check, archived → "upcoming"
+  bulkArchive(Request)  → { ids: [] }, organizer scoped to own events
+  bulkRestore(Request)  → { ids: [] }, organizer scoped to own events
 
-Manual:
-  - POST /api/events/{id}/manual-check-in with user_id
-  - Direct ID-based check-in
+AttendanceController:
+  byEvent(Request,Event)     → paginated (50), filterable by status/search, eager-loads user
+  byStudent(Request,int)     → paginated (15), loads event info
+  myAttendance(Request)      → same as byStudent for current user
+  checkIn(Request,Event)     → generic check-in, user_id or falls back to auth user, method=manual
+  manualCheckIn(Request,Event) → validates user_id, records as 'manual'
+  rfidCheckIn(Request,Event)   → validates student_id string, looks up user, records as 'rfid'
+  faceCheckIn(Request,Event)   → validates user_id, records as 'facial' (no server-side face match)
+  liveDashboard(Event)         → returns event+counts, recent 20 check-ins, method breakdown,
+                                  capacity percentage
+  recordAttendance (private)   → duplicate check (409), late if >15min, creates Attendance
 
-All methods:
-  - Duplicate check (409 if already checked in)
-  - Late status if check-in > 15 minutes after event start_time
-  - Attendance record created with method + timestamp
+FacialEnrollmentController:
+  enroll(Request)       → images_count (1-10), face_data (JSON string), status=pending
+                           rejects if existing non-rejected enrollment (409)
+                           deletes existing rejected enrollment to allow re-enrollment
+  status(Request)       → returns current user's enrollment or { status: 'not_enrolled' }
+  destroy(Request)      → deletes current user's enrollment
+  index(Request)        → admin: paginated(15), filterable by status/search
+  approve(Request,FE)   → status=approved, reviewed_at, reviewed_by
+  reject(Request,FE)    → status=rejected, rejection_reason (max 500 chars)
+  enrolledFaces()       → returns approved enrollments with face_data + user info
+
+UserController:
+  index(Request)        → paginated(15), ?role= filter, ?search= (name|email|student_id)
+  show(User)            → user details
+  store(Request)        → validates name/email/password/role/student_id, returns 201
+  update(Request,User)  → all optional, uniqueness ignores current user
+  destroy(User)         → hard delete
+  updateRole(Request,User) → validates role enum, updates role only
+
+AnalyticsController:
+  dashboard()           → total_users/students/organizers/events, active_events, completed_events,
+                           total_attendance, pending_enrollments, attendance_trend (30 days),
+                           events_by_status, recent_events (5)
+  eventStats(Request)   → per-event present/late/absent/total, filterable by date range
+  attendanceStats(Request) → by_method, by_status, top_students (10), attendance_rates
+
+ReportController:
+  eventReport(Event)    → event+organizer, attendees list, method breakdown
+  attendanceReport(Request) → cross-event, filterable by date range + event_id
+  exportCSV(Event)      → streamed CSV (Student Name, Email, Student ID, Check-in Time,
+                           Method, Status), chunked 200 rows
+
+
+MODEL RELATIONSHIPS & HELPERS
+────────────────
+User:
+  - organizedEvents() → HasMany(Event, 'organizer_id')
+  - attendances()     → HasMany(Attendance)
+  - facialEnrollment() → HasOne(FacialEnrollment)
+  - isAdmin(), isOrganizer(), isStudent() → role checks
+
+Event:
+  - organizer()    → BelongsTo(User, 'organizer_id')
+  - attendances()  → HasMany(Attendance)
+  - scopeUpcoming($query)   → date >= today, status in [upcoming, ongoing]
+  - scopeByOrganizer($query, $id) → organizer_id = $id
+  - attendeeCount(): int    → count where status in [present, late]
+  - isAtCapacity(): bool    → capacity set AND attendeeCount >= capacity
+
+Attendance:
+  - event() → BelongsTo(Event)
+  - user()  → BelongsTo(User)
+
+FacialEnrollment:
+  - user()       → BelongsTo(User)
+  - reviewer()   → BelongsTo(User, 'reviewed_by')
+
+
+MIDDLEWARE
+────────────────
+EnsureRole:
+  - Usage: ->middleware('role:admin') or ->middleware('role:admin,organizer')
+  - Accepts variadic roles via string splitting
+  - Returns 403 { message: "Forbidden." } if user is null or role not in allowed list
+  - Uses strict in_array comparison
+
+
+GPS GEOFENCING (Frontend — client-side)
+────────────────
+  Campus center: { lat: 12.7478, lng: 121.4732 }
+  Radius: 500 meters
+  Formula: Haversine (R = 6371e3 meters)
+    a = sin²(ΔLat/2) + cos(lat1)·cos(lat2)·sin²(ΔLng/2)
+    distance = R × 2 × atan2(√a, √(1−a))
+  CheckInStation (organizer): navigator.geolocation.watchPosition (continuous tracking)
+    - enableHighAccuracy: true, maximumAge: 10000, timeout: 15000
+  EventCheckIn (student): navigator.geolocation.getCurrentPosition (one-shot)
+  Statuses: "inside" (≤ 500m) | "outside" (> 500m) | "denied" | "unsupported" | "unknown"
+
+
+SHARED UI COMPONENTS (frontend/src/components/ui/index.jsx)
+────────────────
+  StatsCard       → KPI card with icon (9 color schemes), optional change indicator
+  DataTable       → Sortable columns (asc/desc toggle), client-side pagination
+                     (page size selector [5,10,20,50], numbered page buttons)
+  StatusBadge     → Semantic ring colors per status (present=emerald, late=amber, etc.)
+  PageHeader      → Title + description + action buttons area
+  SearchInput     → Input with magnifying glass icon
+  Modal           → Sizes: sm/md/lg/xl, backdrop blur, scale-in animation
+  ConfirmDialog   → Cancel/confirm with optional danger mode
+  EmptyState      → Centered icon + title + optional description & action
+  LoadingSpinner  → CSS spinner (sm/md/lg sizes)
+
+
+FRONTEND CONTEXTS
+────────────────
+AuthContext:
+  State: user, loading, error, isAuthenticated
+  Methods: login(), register(), logout(), fetchUser()
+  Computed: isAdmin, isOrganizer, isStudent (boolean properties)
+  Storage: auth_token + user JSON in localStorage
+
+ThemeContext:
+  State: dark (boolean)
+  Methods: toggle()
+  Storage: "theme" key in localStorage, falls back to system preference
+  Effect: toggles <html> "dark" class + colorScheme CSS property
+
+
+UTILITY FUNCTIONS (frontend/src/lib/utils.js)
+────────────────
+  cn(...inputs)           → clsx() + twMerge() — Tailwind class merger
+  formatDate(date)        → "March 9, 2026" (en-US, long month)
+  formatTime(date)        → "08:30 AM" (en-US, 2-digit h:m)
+  formatDateTime(date)    → "Mar 9, 2026, 08:30 AM" (short month)
+  getInitials(name)       → First letter of each word, uppercase, max 2 chars
+  getRoleBadgeColor(role) → Tailwind classes (admin=purple, organizer=blue, student=emerald)
+  getStatusBadgeColor(s)  → Tailwind classes (present=emerald, pending=amber, etc.)
+
+
+FRONTEND API LAYER (frontend/src/api/)
+────────────────
+axios.js:
+  - Base URL: VITE_API_URL env var or http://localhost:8000
+  - Request interceptor: attaches Bearer token from localStorage
+  - Response interceptor: 401 → clear token/user, redirect to /
+
+endpoints.js — grouped API functions:
+  authAPI:       login, register, logout, getUser, forgotPassword, resetPassword
+  usersAPI:      getAll, getById, create, update, delete, updateRole
+  eventsAPI:     getAll, getById, create, update, delete, archive, restore,
+                 bulkArchive, bulkRestore, getUpcoming, getAttendance
+  attendanceAPI: checkIn, manualCheckIn, rfidCheckIn, faceCheckIn, getByEvent,
+                 getByStudent, getMyAttendance, getLiveDashboard
+  enrollmentAPI: enroll, getStatus, delete, getAll, approve, reject, getEnrolledFaces
+  analyticsAPI:  getDashboard, getEventStats, getAttendanceStats
+  reportsAPI:    getEventReport, getAttendanceReport, exportCSV
 
 
 TEST ACCOUNTS (password: "password123")
@@ -290,12 +666,26 @@ Credentials: enabled
 Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
 
 
+DATABASE MIGRATIONS (10 files)
+────────────────
+  1. create_users_table               → Core users (id, name, email, password)
+  2. create_cache_table               → Cache + cache_locks
+  3. create_jobs_table                → Jobs, job_batches, failed_jobs
+  4. add_two_factor_columns           → 2FA columns on users
+  5. add_role_and_student_id          → role enum + student_id on users
+  6. create_events_table              → Events with attendance_method + status
+  7. create_attendances_table         → Attendance (unique event_id+user_id)
+  8. create_facial_enrollments_table  → Enrollment with approval workflow
+  9. create_personal_access_tokens    → Sanctum tokens
+  10. add_archived_status_to_events   → Adds "archived" to status enum
+
+
 SEEDED DATA SUMMARY
 ────────────────
   27 users:  1 admin, 5 organizers, 21 students (Filipino names, year-based IDs)
-  21 events: 12 completed, 1 ongoing, 8 upcoming (realistic university events)
-  179 attendance records across completed & ongoing events
-  19 facial enrollments: 12 approved, 5 pending, 2 rejected
+  ~21 events: 12 completed, 1 ongoing, 8 upcoming (realistic university events)
+  ~240 attendance records across completed & ongoing events
+  19 facial enrollments: 12 approved (with face_data), 5 pending, 2 rejected
 
 Event examples:
   - University Foundation Day & Homecoming
@@ -308,5 +698,8 @@ Event examples:
   - Intramurals 2026 – Opening Ceremony
   - GAD Sensitivity Forum
   - Filipino Cultural Night: Sayaw at Awitin
+
+Venues: Main Auditorium, CIT Covered Court, AVR Building C,
+        Engineering Building, off-campus locations
 
 ================================================================================
