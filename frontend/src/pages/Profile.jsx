@@ -17,16 +17,16 @@ export default function Profile() {
 
   const mockProfile = {
     name: user?.name || 'User',
-    email: user?.email || 'user@ueventtrack.com',
+    email: user?.email || 'user@university.edu.ph',
     role: user?.role || 'student',
-    student_id: '2024-00001',
+    student_id: '2023-01247',
     department: 'College of Information Technology',
-    joined: '2024-08-15',
-    rfid_tag: 'RFID-001-2024',
+    joined: '2023-08-12',
+    rfid_tag: 'RFID-3184-2023',
     rfid_status: 'active',
     face_enrollment: 'enrolled',
-    events_attended: 24,
-    total_events: 35,
+    events_attended: 19,
+    total_events: 28,
   };
 
   const enrollment = enrollmentStatusMap[mockProfile.face_enrollment] || enrollmentStatusMap.none;

@@ -7,30 +7,30 @@ import { ClipboardCheck, Eye, Users, Calendar, ScanFace, CreditCard, ClipboardLi
 const mockEvents = [
   {
     id: 1,
-    title: 'Leadership Training Seminar',
-    date: '2026-03-05T09:00:00',
+    title: 'NSTP Civic Welfare Training – Batch 4',
+    date: '2026-03-11T07:30:00',
     status: 'upcoming',
     method: 'face_recognition',
     attendees: 0,
-    capacity: 200,
+    capacity: 180,
   },
   {
     id: 2,
-    title: 'Cultural Night 2026',
-    date: '2026-03-03T18:00:00',
+    title: 'CIT Week 2026: Opening Ceremony',
+    date: '2026-03-09T08:00:00',
     status: 'ongoing',
     method: 'face_recognition',
-    attendees: 342,
-    capacity: 500,
+    attendees: 417,
+    capacity: 600,
   },
   {
     id: 3,
-    title: 'Academic Excellence Awards',
-    date: '2026-03-01T14:00:00',
+    title: 'Parangal: Academic Honors Convocation',
+    date: '2026-03-07T14:00:00',
     status: 'completed',
     method: 'rfid',
-    attendees: 189,
-    capacity: 200,
+    attendees: 213,
+    capacity: 250,
   },
 ];
 
@@ -39,10 +39,10 @@ export default function AttendanceMonitor() {
   const [search, setSearch] = useState('');
 
   const mockAttendees = [
-    { id: 1, name: 'Juan Dela Cruz', student_id: '2024-00001', time: '2026-03-03T17:45:00', method: 'face', status: 'present' },
-    { id: 2, name: 'Maria Santos', student_id: '2024-00002', time: '2026-03-03T17:48:00', method: 'face', status: 'present' },
-    { id: 3, name: 'Ana Rivera', student_id: '2024-00004', time: '2026-03-03T17:50:00', method: 'rfid', status: 'present' },
-    { id: 4, name: 'Pedro Gomez', student_id: '2024-00003', time: '2026-03-03T17:52:00', method: 'manual', status: 'present' },
+    { id: 1, name: 'Rafael Angelo Soriano', student_id: '2022-00583', time: '2026-03-09T07:42:00', method: 'face', status: 'present' },
+    { id: 2, name: 'Althea Mae Villanueva', student_id: '2023-01247', time: '2026-03-09T07:46:00', method: 'face', status: 'present' },
+    { id: 3, name: 'Mark Jayson Tolentino', student_id: '2023-00916', time: '2026-03-09T07:51:00', method: 'rfid', status: 'present' },
+    { id: 4, name: 'Jessa Marie Pangilinan', student_id: '2024-01802', time: '2026-03-09T07:54:00', method: 'manual', status: 'present' },
   ];
 
   const methodIcons = {

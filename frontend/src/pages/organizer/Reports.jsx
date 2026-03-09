@@ -7,9 +7,9 @@ import {
 } from 'recharts';
 
 const mockReports = [
-  { id: 1, event: 'Cultural Night 2026', date: '2026-03-03', total: 500, present: 342, method: 'Face Recognition', rate: 68.4 },
-  { id: 2, event: 'Academic Excellence Awards', date: '2026-03-01', total: 200, present: 189, method: 'RFID', rate: 94.5 },
-  { id: 3, event: 'Environmental Awareness Campaign', date: '2026-02-28', total: 300, present: 156, method: 'Manual', rate: 52.0 },
+  { id: 1, event: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09', total: 600, present: 417, method: 'Face Recognition', rate: 69.5 },
+  { id: 2, event: 'Parangal: Academic Honors Convocation', date: '2026-03-07', total: 250, present: 213, method: 'RFID', rate: 85.2 },
+  { id: 3, event: 'Blood Donation Drive – Red Cross Partnership', date: '2026-03-04', total: 200, present: 164, method: 'Manual', rate: 82.0 },
 ];
 
 const chartData = mockReports.map((r) => ({ name: r.event.length > 18 ? r.event.slice(0, 18) + '…' : r.event, Present: r.present, Expected: r.total })).reverse();

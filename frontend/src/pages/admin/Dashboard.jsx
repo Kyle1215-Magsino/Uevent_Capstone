@@ -20,29 +20,29 @@ import { cn, formatDateTime } from '../../lib/utils';
 
 // Mock data for demonstration
 const mockStats = {
-  totalUsers: 2547,
-  totalEvents: 156,
-  totalAttendance: 45230,
-  enrolledFaces: 1832,
-  activeEvents: 5,
-  pendingEnrollments: 12,
-  rfidAssigned: 2103,
-  locationVerified: 41580,
+  totalUsers: 3184,
+  totalEvents: 87,
+  totalAttendance: 29741,
+  enrolledFaces: 2406,
+  activeEvents: 3,
+  pendingEnrollments: 9,
+  rfidAssigned: 2753,
+  locationVerified: 27518,
 };
 
 const mockRecentEvents = [
-  { id: 1, title: 'Leadership Training Seminar', date: '2026-03-05T09:00:00', status: 'upcoming', organizer: 'CSG', attendees: 0, capacity: 200 },
-  { id: 2, title: 'Cultural Night 2026', date: '2026-03-03T18:00:00', status: 'ongoing', organizer: 'Cultural Committee', attendees: 342, capacity: 500 },
-  { id: 3, title: 'Academic Excellence Awards', date: '2026-03-01T14:00:00', status: 'completed', organizer: 'Academic Affairs', attendees: 189, capacity: 200 },
-  { id: 4, title: 'Environmental Awareness Campaign', date: '2026-02-28T08:00:00', status: 'completed', organizer: 'EcoClub', attendees: 156, capacity: 300 },
+  { id: 1, title: 'NSTP Civic Welfare Training – Batch 4', date: '2026-03-11T07:30:00', status: 'upcoming', organizer: 'NSTP Office', attendees: 0, capacity: 180 },
+  { id: 2, title: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09T08:00:00', status: 'ongoing', organizer: 'CIT Student Council', attendees: 417, capacity: 600 },
+  { id: 3, title: 'Parangal: Academic Honors Convocation', date: '2026-03-07T14:00:00', status: 'completed', organizer: 'Office of Student Affairs', attendees: 213, capacity: 250 },
+  { id: 4, title: 'Blood Donation Drive – Red Cross Partnership', date: '2026-03-04T08:00:00', status: 'completed', organizer: 'University Health Services', attendees: 164, capacity: 200 },
 ];
 
 const mockRecentActivity = [
-  { id: 1, action: 'New student registered', user: 'Maria Santos', time: '2 minutes ago' },
-  { id: 2, action: 'Event created', user: 'John Reyes', time: '15 minutes ago' },
+  { id: 1, action: 'New student registered', user: 'Althea Mae Villanueva', time: '4 minutes ago' },
+  { id: 2, action: 'Event created: GAD Sensitivity Forum', user: 'Prof. Rosario Bautista', time: '28 minutes ago' },
   { id: 3, action: 'Facial enrollment approved', user: 'Admin', time: '1 hour ago' },
-  { id: 4, action: 'Attendance report generated', user: 'Sarah Lopez', time: '2 hours ago' },
-  { id: 5, action: 'Event completed', user: 'System', time: '3 hours ago' },
+  { id: 4, action: 'Attendance report exported for CIT Week Day 1', user: 'Engr. Dalisay Reyes', time: '2 hours ago' },
+  { id: 5, action: 'Event completed: Blood Donation Drive', user: 'System', time: '5 hours ago' },
 ];
 
 export default function AdminDashboard() {

@@ -6,39 +6,39 @@ import {
   AreaChart, Area,
 } from 'recharts';
 
-// Mock analytics data
+// Analytics data – A.Y. 2025-2026
 const monthlyData = [
-  { month: 'Sep', events: 12, attendance: 3200 },
-  { month: 'Oct', events: 18, attendance: 5100 },
-  { month: 'Nov', events: 15, attendance: 4300 },
-  { month: 'Dec', events: 8, attendance: 2100 },
-  { month: 'Jan', events: 20, attendance: 6400 },
-  { month: 'Feb', events: 22, attendance: 7200 },
-  { month: 'Mar', events: 5, attendance: 1800 },
+  { month: 'Sep', events: 9, attendance: 2870 },
+  { month: 'Oct', events: 14, attendance: 4615 },
+  { month: 'Nov', events: 11, attendance: 3942 },
+  { month: 'Dec', events: 6, attendance: 1738 },
+  { month: 'Jan', events: 16, attendance: 5283 },
+  { month: 'Feb', events: 18, attendance: 6491 },
+  { month: 'Mar', events: 4, attendance: 1527 },
 ];
 
 const topEvents = [
-  { name: 'University Foundation Day', attendance: 1250, rate: 96 },
-  { name: 'Student Council Election', attendance: 890, rate: 92 },
-  { name: 'Inter-College Sports Fest', attendance: 780, rate: 88 },
-  { name: 'Cultural Night', attendance: 650, rate: 85 },
-  { name: 'Academic Excellence Awards', attendance: 520, rate: 82 },
+  { name: 'University Foundation Day & Homecoming', attendance: 1487, rate: 94 },
+  { name: 'SSG General Assembly: 2nd Semester', attendance: 1103, rate: 91 },
+  { name: 'Intramurals 2026 – Opening Ceremony', attendance: 938, rate: 87 },
+  { name: 'CIT Week 2026: Opening Ceremony', attendance: 724, rate: 84 },
+  { name: 'Parangal: Academic Honors Convocation', attendance: 561, rate: 81 },
 ];
 
 const methodDistribution = [
-  { method: 'Face Recognition', count: 78, percentage: 50 },
-  { method: 'RFID', count: 54, percentage: 35 },
-  { method: 'Manual', count: 24, percentage: 15 },
+  { method: 'Face Recognition', count: 43, percentage: 49 },
+  { method: 'RFID', count: 31, percentage: 36 },
+  { method: 'Manual', count: 13, percentage: 15 },
 ];
 
 const PIE_COLORS = ['#10b981', '#059669', '#6ee7b7'];
 
 const peakHoursData = [
-  { time: '7-9 AM', count: 4200 },
-  { time: '9-12 PM', count: 8900 },
-  { time: '12-2 PM', count: 3100 },
-  { time: '2-5 PM', count: 7400 },
-  { time: '5-8 PM', count: 5600 },
+  { time: '7-9 AM', count: 5340 },
+  { time: '9-12 PM', count: 9125 },
+  { time: '12-2 PM', count: 2760 },
+  { time: '2-5 PM', count: 6814 },
+  { time: '5-8 PM', count: 4702 },
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -66,10 +66,10 @@ export default function Analytics() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Events This Semester" value="100" change="15%" changeType="increase" icon={Calendar} />
-        <StatsCard title="Avg. Attendance Rate" value="77.5%" change="3.2%" changeType="increase" icon={TrendingUp} />
+        <StatsCard title="Events This Semester" value="78" change="12%" changeType="increase" icon={Calendar} />
+        <StatsCard title="Avg. Attendance Rate" value="79.3%" change="2.8%" changeType="increase" icon={TrendingUp} />
         <StatsCard title="Peak Month" value="Feb 2026" icon={Award} />
-        <StatsCard title="Active Students" value="2,124" change="8%" changeType="increase" icon={Users} />
+        <StatsCard title="Active Students" value="2,406" change="6%" changeType="increase" icon={Users} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

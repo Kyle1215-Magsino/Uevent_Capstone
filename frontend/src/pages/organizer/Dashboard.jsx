@@ -14,16 +14,16 @@ import {
 } from 'lucide-react';
 
 const mockStats = {
-  totalEvents: 12,
+  totalEvents: 8,
   activeEvents: 2,
-  totalAttendance: 3420,
-  avgRate: 82.5,
+  totalAttendance: 2764,
+  avgRate: 79.3,
 };
 
 const mockMyEvents = [
-  { id: 1, title: 'Leadership Training Seminar', date: '2026-03-05T09:00:00', status: 'upcoming', attendees: 0, capacity: 200, method: 'face_recognition' },
-  { id: 2, title: 'Cultural Night 2026', date: '2026-03-03T18:00:00', status: 'ongoing', attendees: 342, capacity: 500, method: 'face_recognition' },
-  { id: 3, title: 'Academic Excellence Awards', date: '2026-03-01T14:00:00', status: 'completed', attendees: 189, capacity: 200, method: 'rfid' },
+  { id: 1, title: 'NSTP Civic Welfare Training – Batch 4', date: '2026-03-11T07:30:00', status: 'upcoming', attendees: 0, capacity: 180, method: 'face_recognition' },
+  { id: 2, title: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09T08:00:00', status: 'ongoing', attendees: 417, capacity: 600, method: 'face_recognition' },
+  { id: 3, title: 'Parangal: Academic Honors Convocation', date: '2026-03-07T14:00:00', status: 'completed', attendees: 213, capacity: 250, method: 'rfid' },
 ];
 
 export default function OrganizerDashboard() {

@@ -17,23 +17,23 @@ import {
 } from 'lucide-react';
 
 const mockStats = {
-  eventsAttended: 24,
-  totalEvents: 35,
+  eventsAttended: 19,
+  totalEvents: 28,
   enrollmentStatus: 'enrolled', // enrolled | pending | not_enrolled
-  attendanceRate: 68.6,
+  attendanceRate: 67.9,
 };
 
 const mockUpcomingEvents = [
-  { id: 1, title: 'Leadership Training Seminar', date: '2026-03-05T09:00:00', venue: 'Main Auditorium', method: 'face_recognition' },
-  { id: 2, title: 'Freshman Orientation', date: '2026-03-10T08:00:00', venue: 'Main Auditorium', method: 'face_recognition' },
-  { id: 3, title: 'Inter-College Sports Fest', date: '2026-03-15T07:00:00', venue: 'Sports Complex', method: 'rfid' },
+  { id: 1, title: 'NSTP Civic Welfare Training – Batch 4', date: '2026-03-11T07:30:00', venue: 'Covered Court', method: 'face_recognition' },
+  { id: 2, title: 'GAD Sensitivity Forum', date: '2026-03-14T13:00:00', venue: 'AVR Building C', method: 'face_recognition' },
+  { id: 3, title: 'Intramurals 2026 – Opening Ceremony', date: '2026-03-18T07:00:00', venue: 'University Oval', method: 'rfid' },
 ];
 
 const mockRecentAttendance = [
-  { id: 1, event: 'Cultural Night 2026', date: '2026-03-03T18:00:00', status: 'present', method: 'face' },
-  { id: 2, event: 'Academic Excellence Awards', date: '2026-03-01T14:00:00', status: 'present', method: 'rfid' },
-  { id: 3, event: 'Environmental Awareness Campaign', date: '2026-02-28T08:00:00', status: 'absent', method: '-' },
-  { id: 4, event: 'Tech Innovation Summit', date: '2026-02-20T09:00:00', status: 'present', method: 'face' },
+  { id: 1, event: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09T08:00:00', status: 'present', method: 'face' },
+  { id: 2, event: 'Parangal: Academic Honors Convocation', date: '2026-03-07T14:00:00', status: 'present', method: 'rfid' },
+  { id: 3, event: 'Blood Donation Drive – Red Cross Partnership', date: '2026-03-04T08:00:00', status: 'absent', method: '-' },
+  { id: 4, event: 'Research Colloquium: AI & Emerging Tech', date: '2026-02-25T09:00:00', status: 'present', method: 'face' },
 ];
 
 export default function StudentDashboard() {

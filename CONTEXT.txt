@@ -1,0 +1,312 @@
+================================================================================
+  U-EVENT — University Event Attendance Management System
+  Capstone Project — Context Document
+================================================================================
+
+PROJECT OVERVIEW
+────────────────
+U-Event is a full-stack web application for managing university event attendance.
+It supports three user roles — Admin, Organizer, and Student — and offers three
+check-in methods: Facial Recognition (face-api.js), RFID, and Manual entry.
+
+The system covers the complete event lifecycle: creation, scheduling, real-time
+attendance monitoring, facial enrollment, and post-event reporting with analytics.
+
+
+TECH STACK
+────────────────
+  Frontend:   React 19 + Vite + Tailwind CSS
+  Backend:    Laravel 12 (PHP 8.2+)
+  Database:   MySQL (database name: capstone_Uevent)
+  Auth:       Laravel Sanctum (bearer tokens)
+  Face AI:    face-api.js (TinyFaceDetector + FaceRecognitionNet, 128-D descriptors)
+  Charts:     Recharts
+  HTTP:       Axios (with token interceptor & 401 auto-logout)
+  Icons:      Lucide React
+
+
+FOLDER STRUCTURE
+────────────────
+U-event/
+├── backend/                        ← Laravel 12 API
+│   ├── app/
+│   │   ├── Http/
+│   │   │   ├── Controllers/Api/
+│   │   │   │   ├── AuthController.php
+│   │   │   │   ├── UserController.php
+│   │   │   │   ├── EventController.php
+│   │   │   │   ├── AttendanceController.php
+│   │   │   │   ├── FacialEnrollmentController.php
+│   │   │   │   ├── ReportController.php
+│   │   │   │   └── AnalyticsController.php
+│   │   │   └── Middleware/
+│   │   │       └── EnsureRole.php
+│   │   ├── Models/
+│   │   │   ├── User.php
+│   │   │   ├── Event.php
+│   │   │   ├── Attendance.php
+│   │   │   └── FacialEnrollment.php
+│   │   └── Providers/
+│   ├── config/
+│   ├── database/
+│   │   ├── factories/              ← UserFactory, EventFactory, etc.
+│   │   ├── migrations/             ← 10 migration files
+│   │   └── seeders/
+│   │       └── DatabaseSeeder.php  ← Realistic Philippine university data
+│   ├── routes/
+│   │   ├── api.php                 ← All API endpoints (50+)
+│   │   └── web.php
+│   └── .env                        ← DB config, session, etc.
+│
+├── frontend/                       ← React 19 SPA
+│   ├── public/
+│   │   └── models/                 ← face-api.js model weights
+│   ├── src/
+│   │   ├── api/
+│   │   │   ├── axios.js            ← Axios instance + auth interceptor
+│   │   │   └── endpoints.js        ← All API endpoint functions
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   └── AppLayout.jsx   ← Sidebar, navbar, role menus
+│   │   │   └── ui/
+│   │   │       └── index.jsx       ← StatsCard, DataTable, Modal, etc.
+│   │   ├── contexts/
+│   │   │   ├── AuthContext.jsx     ← Auth state, login/register/logout
+│   │   │   └── ThemeContext.jsx    ← Dark/light mode toggle
+│   │   ├── lib/
+│   │   │   └── utils.js           ← cn(), formatDate(), getInitials()
+│   │   ├── pages/
+│   │   │   ├── Landing.jsx         ← Hero + login/register modals
+│   │   │   ├── Profile.jsx
+│   │   │   ├── Settings.jsx
+│   │   │   ├── NotFound.jsx
+│   │   │   ├── admin/
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   ├── UserManagement.jsx
+│   │   │   │   ├── Enrollments.jsx
+│   │   │   │   ├── EventDetail.jsx
+│   │   │   │   ├── EventMonitoring.jsx
+│   │   │   │   ├── Analytics.jsx
+│   │   │   │   ├── Reports.jsx
+│   │   │   │   └── RFIDManagement.jsx
+│   │   │   ├── organizer/
+│   │   │   │   ├── Dashboard.jsx
+│   │   │   │   ├── CreateEvent.jsx
+│   │   │   │   ├── ManageEvents.jsx
+│   │   │   │   ├── AttendanceMonitor.jsx
+│   │   │   │   ├── CheckInStation.jsx
+│   │   │   │   ├── LiveDashboard.jsx
+│   │   │   │   └── Reports.jsx
+│   │   │   └── student/
+│   │   │       ├── Dashboard.jsx
+│   │   │       ├── Events.jsx
+│   │   │       ├── EventCheckIn.jsx
+│   │   │       ├── FacialEnrollment.jsx
+│   │   │       └── AttendanceHistory.jsx
+│   │   ├── routes/
+│   │   │   └── Guards.jsx          ← ProtectedRoute, RoleRoute, GuestRoute
+│   │   ├── App.jsx                 ← Top-level routing
+│   │   └── main.jsx               ← Entry point
+│   └── package.json
+│
+└── CONTEXT.txt                     ← This file
+
+
+DATABASE SCHEMA
+────────────────
+users
+  id, name, email (unique), password, role (admin|organizer|student),
+  student_id (unique, nullable), email_verified_at, two_factor_secret,
+  two_factor_recovery_codes, two_factor_confirmed_at, remember_token, timestamps
+
+events
+  id, title, description, date, start_time, end_time, venue, capacity,
+  attendance_method (facial|rfid|manual|any),
+  status (draft|upcoming|ongoing|completed|cancelled|archived),
+  organizer_id (FK → users), timestamps
+
+attendances
+  id, event_id (FK → events), user_id (FK → users),
+  check_in_time (datetime), method (facial|rfid|manual),
+  status (present|late|absent), timestamps
+  UNIQUE(event_id, user_id)
+
+facial_enrollments
+  id, user_id (FK → users), status (pending|approved|rejected),
+  images_count, face_data (JSON of 128-D descriptor arrays),
+  submitted_at, reviewed_at, reviewed_by (FK → users),
+  rejection_reason, timestamps
+
+sessions, cache, cache_locks, jobs, job_batches, failed_jobs,
+password_reset_tokens, personal_access_tokens (Sanctum)
+
+
+API ROUTES (backend/routes/api.php)
+────────────────
+Public:
+  POST /api/register                          → AuthController@register
+  POST /api/login                             → AuthController@login
+
+Authenticated (all roles):
+  GET  /api/user                              → Current user info
+  POST /api/logout                            → Revoke token
+  GET  /api/events                            → List events
+  GET  /api/events/upcoming                   → Upcoming events
+  GET  /api/events/{id}                       → Event detail
+  GET  /api/my-attendance                     → My attendance records
+
+Check-in (student, organizer, admin):
+  POST /api/events/{id}/check-in              → Generic check-in
+  POST /api/events/{id}/face-check-in         → Face recognition check-in
+  POST /api/events/{id}/rfid-check-in         → RFID check-in
+  POST /api/events/{id}/manual-check-in       → Manual check-in
+  GET  /api/enrolled-faces                    → All approved face descriptors
+
+Student only:
+  POST /api/facial-enrollment                 → Submit face data
+  GET  /api/facial-enrollment/status          → My enrollment status
+  DEL  /api/facial-enrollment                 → Delete my enrollment
+
+Organizer + Admin:
+  POST /api/events                            → Create event
+  PUT  /api/events/{id}                       → Update event
+  DEL  /api/events/{id}                       → Delete event
+  PATCH /api/events/{id}/archive              → Archive event
+  PATCH /api/events/{id}/restore              → Restore event
+  POST /api/events/bulk-archive               → Bulk archive
+  POST /api/events/bulk-restore               → Bulk restore
+  GET  /api/events/{id}/attendance            → Event attendance list
+  GET  /api/events/{id}/live-dashboard        → Live attendance data
+  GET  /api/reports/events/{id}               → Event report
+  GET  /api/reports/events/{id}/export        → Export CSV
+  GET  /api/reports/attendance                → Attendance summary report
+
+Admin only:
+  GET  /api/users                             → List users
+  GET  /api/users/{id}                        → User detail
+  POST /api/users                             → Create user
+  PUT  /api/users/{id}                        → Update user
+  DEL  /api/users/{id}                        → Delete user
+  PATCH /api/users/{id}/role                  → Change role
+  GET  /api/facial-enrollments                → All enrollments
+  PATCH /api/facial-enrollments/{id}/approve  → Approve enrollment
+  PATCH /api/facial-enrollments/{id}/reject   → Reject enrollment
+  GET  /api/analytics/dashboard               → Admin KPIs
+  GET  /api/analytics/events                  → Event stats
+  GET  /api/analytics/attendance              → Attendance analytics
+  GET  /api/students/{id}/attendance          → Student attendance (admin view)
+
+
+USER ROLES & PERMISSIONS
+────────────────
+Admin
+  - Full access to all features
+  - Manage users (CRUD, role assignment)
+  - Approve/reject facial enrollments
+  - View system-wide analytics and reports
+  - Monitor all events and attendance
+
+Organizer
+  - Create, edit, archive/restore own events
+  - Monitor attendance for own events (real-time)
+  - Operate check-in stations (face, RFID, manual)
+  - Generate reports and export CSV for own events
+
+Student
+  - View upcoming events and own attendance history
+  - Submit facial enrollment (5 descriptors via webcam)
+  - Check in to events (face, RFID, or manual)
+  - View own profile and enrollment status
+
+
+AUTHENTICATION FLOW
+────────────────
+1. Register: POST /api/register → creates user + returns Sanctum token
+2. Login:    POST /api/login    → validates credentials → returns token
+3. Token stored in localStorage, injected via Axios interceptor (Bearer header)
+4. On 401 response: token cleared, user redirected to landing page
+5. Logout:   POST /api/logout   → revokes current token server-side
+
+
+FACIAL ENROLLMENT WORKFLOW
+────────────────
+1. Student navigates to /student/enrollment
+2. face-api.js models loaded from /models directory (TinyFaceDetector + FaceRecognitionNet)
+3. 15-second webcam scan captures 5 face descriptors (128-D Float32Array each)
+4. Descriptors submitted to POST /api/facial-enrollment as JSON
+5. Enrollment created with status "pending"
+6. Admin reviews at /admin/enrollments → approves or rejects (with reason)
+7. Approved descriptors stored in face_data column for check-in matching
+
+
+CHECK-IN WORKFLOW
+────────────────
+Face Recognition:
+  - POST /api/events/{id}/face-check-in with descriptor
+  - Backend compares against all approved enrollments
+  - Euclidean distance threshold for matching
+
+RFID:
+  - POST /api/events/{id}/rfid-check-in with student_id
+  - Looks up user by student_id field
+
+Manual:
+  - POST /api/events/{id}/manual-check-in with user_id
+  - Direct ID-based check-in
+
+All methods:
+  - Duplicate check (409 if already checked in)
+  - Late status if check-in > 15 minutes after event start_time
+  - Attendance record created with method + timestamp
+
+
+TEST ACCOUNTS (password: "password123")
+────────────────
+Admin:      admin@ueventtrack.com        (Dr. Renato C. Villarosa)
+Organizer:  organizer@ueventtrack.com    (Engr. Dalisay M. Reyes)
+Organizer:  organizer2@ueventtrack.com   (Prof. Rosario T. Bautista)
+Student:    student@ueventtrack.com      (Althea Mae D. Villanueva, ID: 2023-01247)
+
+
+DEV COMMANDS
+────────────────
+Backend:
+  cd backend
+  php artisan serve                    → Start Laravel dev server (port 8000)
+  php artisan migrate:fresh --seed     → Reset DB & seed with realistic data
+  php artisan tinker                   → Interactive shell
+
+Frontend:
+  cd frontend
+  npm install                          → Install dependencies
+  npm run dev                          → Start Vite dev server (port 5173)
+  npm run build                        → Production build
+
+
+CORS CONFIGURATION
+────────────────
+Allowed origins: localhost:3000, localhost:5173-5176
+Credentials: enabled
+Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+
+
+SEEDED DATA SUMMARY
+────────────────
+  27 users:  1 admin, 5 organizers, 21 students (Filipino names, year-based IDs)
+  21 events: 12 completed, 1 ongoing, 8 upcoming (realistic university events)
+  179 attendance records across completed & ongoing events
+  19 facial enrollments: 12 approved, 5 pending, 2 rejected
+
+Event examples:
+  - University Foundation Day & Homecoming
+  - CIT Week 2026: Opening Ceremony
+  - SSG General Assembly: 2nd Semester
+  - NSTP Civic Welfare Training – Batch 4
+  - Parangal: Academic Honors Convocation
+  - Blood Donation Drive – Red Cross Partnership
+  - Research Colloquium: AI & Emerging Tech
+  - Intramurals 2026 – Opening Ceremony
+  - GAD Sensitivity Forum
+  - Filipino Cultural Night: Sayaw at Awitin
+
+================================================================================

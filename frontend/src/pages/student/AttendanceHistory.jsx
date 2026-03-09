@@ -4,14 +4,14 @@ import { cn, formatDateTime, formatDate } from '../../lib/utils';
 import { History, Calendar, Clock, Filter, Download, ScanFace, CreditCard, ClipboardList, ClipboardCheck, TrendingUp, UserX } from 'lucide-react';
 
 const mockAttendance = [
-  { id: 1, event: 'Cultural Night 2026', date: '2026-03-03T18:00:00', checkIn: '2026-03-03T17:45:00', status: 'present', method: 'face' },
-  { id: 2, event: 'Academic Excellence Awards', date: '2026-03-01T14:00:00', checkIn: '2026-03-01T13:50:00', status: 'present', method: 'rfid' },
-  { id: 3, event: 'Environmental Awareness Campaign', date: '2026-02-28T08:00:00', checkIn: null, status: 'absent', method: '-' },
-  { id: 4, event: 'Tech Innovation Summit', date: '2026-02-20T09:00:00', checkIn: '2026-02-20T08:55:00', status: 'present', method: 'face' },
-  { id: 5, event: 'Student Council General Assembly', date: '2026-02-15T14:00:00', checkIn: '2026-02-15T13:45:00', status: 'present', method: 'rfid' },
-  { id: 6, event: 'Career Fair 2026', date: '2026-02-10T09:00:00', checkIn: '2026-02-10T09:10:00', status: 'present', method: 'face' },
-  { id: 7, event: 'Health & Wellness Day', date: '2026-02-05T08:00:00', checkIn: null, status: 'absent', method: '-' },
-  { id: 8, event: 'Christmas Party 2025', date: '2025-12-18T18:00:00', checkIn: '2025-12-18T17:55:00', status: 'present', method: 'manual' },
+  { id: 1, event: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09T08:00:00', checkIn: '2026-03-09T07:48:00', status: 'present', method: 'face' },
+  { id: 2, event: 'Parangal: Academic Honors Convocation', date: '2026-03-07T14:00:00', checkIn: '2026-03-07T13:52:00', status: 'present', method: 'rfid' },
+  { id: 3, event: 'Blood Donation Drive – Red Cross Partnership', date: '2026-03-04T08:00:00', checkIn: null, status: 'absent', method: '-' },
+  { id: 4, event: 'Research Colloquium: AI & Emerging Tech', date: '2026-02-25T09:00:00', checkIn: '2026-02-25T08:47:00', status: 'present', method: 'face' },
+  { id: 5, event: 'SSG General Assembly: 2nd Semester', date: '2026-02-18T14:00:00', checkIn: '2026-02-18T13:41:00', status: 'present', method: 'rfid' },
+  { id: 6, event: 'CIT Industry Immersion Fair', date: '2026-02-11T09:00:00', checkIn: '2026-02-11T09:06:00', status: 'present', method: 'face' },
+  { id: 7, event: 'Mental Health Awareness Webinar', date: '2026-02-06T10:00:00', checkIn: null, status: 'absent', method: '-' },
+  { id: 8, event: 'University Christmas Celebration 2025', date: '2025-12-17T17:00:00', checkIn: '2025-12-17T16:53:00', status: 'present', method: 'manual' },
 ];
 
 const methodIcon = {

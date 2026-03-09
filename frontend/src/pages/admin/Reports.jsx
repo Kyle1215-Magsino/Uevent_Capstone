@@ -7,11 +7,11 @@ import {
 } from 'recharts';
 
 const mockReports = [
-  { id: 1, event: 'Cultural Night 2026', date: '2026-03-03', total: 342, present: 342, method: 'Face Recognition', rate: 68.4 },
-  { id: 2, event: 'Academic Excellence Awards', date: '2026-03-01', total: 200, present: 189, method: 'RFID', rate: 94.5 },
-  { id: 3, event: 'Environmental Awareness Campaign', date: '2026-02-28', total: 300, present: 156, method: 'Manual', rate: 52.0 },
-  { id: 4, event: 'Tech Innovation Summit', date: '2026-02-20', total: 150, present: 132, method: 'Face Recognition', rate: 88.0 },
-  { id: 5, event: 'Student Council General Assembly', date: '2026-02-15', total: 500, present: 423, method: 'RFID', rate: 84.6 },
+  { id: 1, event: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09', total: 600, present: 417, method: 'Face Recognition', rate: 69.5 },
+  { id: 2, event: 'Parangal: Academic Honors Convocation', date: '2026-03-07', total: 250, present: 213, method: 'RFID', rate: 85.2 },
+  { id: 3, event: 'Blood Donation Drive – Red Cross Partnership', date: '2026-03-04', total: 200, present: 164, method: 'Manual', rate: 82.0 },
+  { id: 4, event: 'Research Colloquium: AI & Emerging Tech', date: '2026-02-25', total: 120, present: 103, method: 'Face Recognition', rate: 85.8 },
+  { id: 5, event: 'SSG General Assembly: 2nd Semester', date: '2026-02-18', total: 1200, present: 1103, method: 'RFID', rate: 91.9 },
 ];
 
 const chartData = mockReports.map((r) => ({ name: r.event.length > 18 ? r.event.slice(0, 18) + '…' : r.event, Present: r.present, Expected: r.total })).reverse();

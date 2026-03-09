@@ -13,11 +13,11 @@ const DESCRIPTOR_GOAL = 5;
 
 /* ── Mock data — now includes descriptor count & method ────────────── */
 const mockEnrollments = [
-  { id: 1, name: 'Juan Dela Cruz', student_id: '2024-00001', email: 'juan@university.edu', submitted: '2026-03-02T14:30:00', status: 'pending', descriptors: 5, method: 'Video Scan', quality: 94 },
-  { id: 2, name: 'Maria Santos', student_id: '2024-00002', email: 'maria@university.edu', submitted: '2026-03-02T11:00:00', status: 'approved', descriptors: 5, method: 'Video Scan', quality: 97 },
-  { id: 3, name: 'Pedro Gomez', student_id: '2024-00003', email: 'pedro@university.edu', submitted: '2026-03-01T09:15:00', status: 'pending', descriptors: 5, method: 'Video Scan', quality: 88 },
-  { id: 4, name: 'Ana Rivera', student_id: '2024-00004', email: 'ana@university.edu', submitted: '2026-02-28T16:45:00', status: 'approved', descriptors: 5, method: 'Video Scan', quality: 96 },
-  { id: 5, name: 'Carlos Mendoza', student_id: '2024-00005', email: 'carlos@university.edu', submitted: '2026-02-28T10:20:00', status: 'rejected', descriptors: 3, method: 'Video Scan', quality: 42 },
+  { id: 1, name: 'Althea Mae Villanueva', student_id: '2023-01247', email: 'amvillanueva@university.edu.ph', submitted: '2026-03-08T14:12:00', status: 'pending', descriptors: 5, method: 'Video Scan', quality: 93 },
+  { id: 2, name: 'Rafael Angelo Soriano', student_id: '2022-00583', email: 'rasoriano@university.edu.ph', submitted: '2026-03-07T10:45:00', status: 'approved', descriptors: 5, method: 'Video Scan', quality: 97 },
+  { id: 3, name: 'Jessa Marie Pangilinan', student_id: '2024-01802', email: 'jmpangilinan@university.edu.ph', submitted: '2026-03-06T09:30:00', status: 'pending', descriptors: 5, method: 'Video Scan', quality: 89 },
+  { id: 4, name: 'Mark Jayson Tolentino', student_id: '2023-00916', email: 'mjtolentino@university.edu.ph', submitted: '2026-03-05T16:20:00', status: 'approved', descriptors: 5, method: 'Video Scan', quality: 95 },
+  { id: 5, name: 'Kyla Denise Aguilar', student_id: '2024-02134', email: 'kdaguilar@university.edu.ph', submitted: '2026-03-04T11:05:00', status: 'rejected', descriptors: 3, method: 'Video Scan', quality: 38 },
 ];
 
 export default function Enrollments() {
