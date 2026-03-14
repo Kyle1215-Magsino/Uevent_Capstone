@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +22,8 @@ class EventController extends Controller
 
         if ($user->isOrganizer()) {
             $query->byOrganizer($user->id);
+        } elseif ($user->isStudent()) {
+            $query->whereIn('status', ['upcoming', 'ongoing', 'completed']);
         }
 
         if ($request->filled('status')) {
@@ -78,6 +82,13 @@ class EventController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Normalize legacy attendance_method values
+        if ($request->input('attendance_method') === 'face_recognition') {
+            $request->merge(['attendance_method' => 'facial']);
+        } elseif ($request->input('attendance_method') === 'location') {
+            $request->merge(['attendance_method' => 'any']);
+        }
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -95,6 +106,18 @@ class EventController extends Controller
         $event = Event::create($validated);
         $event->load('organizer:id,name,email');
 
+        // Notify all students about the new event
+        $studentIds = User::where('role', 'student')->pluck('id');
+        foreach ($studentIds as $studentId) {
+            Notification::send(
+                $studentId,
+                'new_event',
+                'New Event: ' . $event->title,
+                'A new event "' . $event->title . '" has been scheduled for ' . $event->date . ' at ' . $event->venue . '.',
+                ['event_id' => $event->id]
+            );
+        }
+
         return response()->json($event, 201);
     }
 
@@ -107,6 +130,13 @@ class EventController extends Controller
         $user = $request->user();
         if ($user->isOrganizer() && $event->organizer_id !== $user->id) {
             return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
+        // Normalize legacy attendance_method values
+        if ($request->input('attendance_method') === 'face_recognition') {
+            $request->merge(['attendance_method' => 'facial']);
+        } elseif ($request->input('attendance_method') === 'location') {
+            $request->merge(['attendance_method' => 'any']);
         }
 
         $validated = $request->validate([

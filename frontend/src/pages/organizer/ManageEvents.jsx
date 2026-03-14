@@ -26,13 +26,13 @@ const methodColors = {
 };
 
 const attendanceMethods = [
-  { value: 'face_recognition', label: 'Face Recognition', description: 'Automated check-in using facial recognition camera.', icon: ScanFace, color: 'border-emerald-800 bg-primary-50', iconColor: 'text-primary-600' },
+  { value: 'facial', label: 'Face Recognition', description: 'Automated check-in using facial recognition camera.', icon: ScanFace, color: 'border-emerald-800 bg-primary-50', iconColor: 'text-primary-600' },
   { value: 'rfid', label: 'RFID Scanning', description: 'Students tap their RFID-enabled ID cards.', icon: CreditCard, color: 'border-emerald-800 bg-primary-50', iconColor: 'text-primary-600' },
-  { value: 'location', label: 'Location Tracking', description: 'Verify students are within campus geofence.', icon: Navigation, color: 'border-emerald-800 bg-primary-50', iconColor: 'text-primary-600' },
+  { value: 'any', label: 'Any Method', description: 'Allow check-in via any supported method.', icon: Navigation, color: 'border-emerald-800 bg-primary-50', iconColor: 'text-primary-600' },
   { value: 'manual', label: 'Manual Verification', description: 'Organizers manually verify and log attendance.', icon: ClipboardList, color: 'border-emerald-500 bg-slate-50 dark:bg-slate-800/50', iconColor: 'text-slate-600 dark:text-slate-300' },
 ];
 
-const emptyForm = { title: '', description: '', date: '', start_time: '', end_time: '', venue: '', capacity: '', attendance_method: 'face_recognition' };
+const emptyForm = { title: '', description: '', date: '', start_time: '', end_time: '', venue: '', capacity: '', attendance_method: 'facial', status: 'upcoming' };
 
 function EventFormFields({ form, onChange }) {
   const handleChange = (field, value) => onChange((prev) => ({ ...prev, [field]: value }));
@@ -98,7 +98,7 @@ function EventFormFields({ form, onChange }) {
             </button>
           ))}
         </div>
-        {form.attendance_method === 'face_recognition' && (
+        {form.attendance_method === 'facial' && (
           <div className="mt-3 bg-violet-50 border border-violet-200 rounded-lg p-3 flex items-start gap-2">
             <Info className="w-4 h-4 text-violet-600 mt-0.5 shrink-0" />
             <p className="text-xs text-violet-700">Students must complete facial enrollment before they can be verified via face recognition.</p>
@@ -110,10 +110,10 @@ function EventFormFields({ form, onChange }) {
             <p className="text-xs text-orange-700">Students must have an RFID tag assigned in the system. Tags are managed by the admin.</p>
           </div>
         )}
-        {form.attendance_method === 'location' && (
+        {form.attendance_method === 'any' && (
           <div className="mt-3 bg-rose-50 border border-rose-200 rounded-lg p-3 flex items-start gap-2">
             <Info className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" />
-            <p className="text-xs text-rose-700">Students must be within the 500m campus geofence radius. Location is verified via GPS.</p>
+            <p className="text-xs text-rose-700">Students can check in using any available method — facial recognition, RFID, or manual verification.</p>
           </div>
         )}
       </div>
@@ -442,7 +442,7 @@ export default function ManageEvents() {
             <SearchInput value={search} onChange={setSearch} placeholder="Search your events..." />
           </div>
           <div className="flex gap-2">
-            {['all', 'upcoming', 'ongoing', 'completed', 'archived'].map((status) => (
+            {['all', 'draft', 'upcoming', 'ongoing', 'completed', 'archived'].map((status) => (
               <button
                 key={status}
                 onClick={() => { setStatusFilter(status); setSelectedIds([]); }}

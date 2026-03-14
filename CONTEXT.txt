@@ -40,6 +40,7 @@ U-event/
 │   │   │   │   ├── EventController.php
 │   │   │   │   ├── AttendanceController.php
 │   │   │   │   ├── FacialEnrollmentController.php
+│   │   │   │   ├── NotificationController.php
 │   │   │   │   ├── ReportController.php
 │   │   │   │   └── AnalyticsController.php
 │   │   │   └── Middleware/
@@ -48,12 +49,13 @@ U-event/
 │   │   │   ├── User.php
 │   │   │   ├── Event.php
 │   │   │   ├── Attendance.php
-│   │   │   └── FacialEnrollment.php
+│   │   │   ├── FacialEnrollment.php
+│   │   │   └── Notification.php
 │   │   └── Providers/
 │   ├── config/
 │   ├── database/
 │   │   ├── factories/              ← UserFactory, EventFactory, etc.
-│   │   ├── migrations/             ← 10 migration files
+│   │   ├── migrations/             ← 11 migration files
 │   │   └── seeders/
 │   │       └── DatabaseSeeder.php  ← Realistic Philippine university data
 │   ├── routes/
@@ -70,7 +72,8 @@ U-event/
 │   │   │   └── endpoints.js        ← All API endpoint functions
 │   │   ├── components/
 │   │   │   ├── layout/
-│   │   │   │   └── AppLayout.jsx   ← Sidebar, navbar, role menus
+│   │   │   │   ├── AppLayout.jsx   ← Sidebar, navbar, role menus
+│   │   │   │   └── NotificationDropdown.jsx ← Bell icon dropdown (live polling)
 │   │   │   └── ui/
 │   │   │       └── index.jsx       ← StatsCard, DataTable, Modal, etc.
 │   │   ├── contexts/
@@ -131,6 +134,12 @@ events
   status (draft|upcoming|ongoing|completed|cancelled|archived),
   organizer_id (FK → users), timestamps
 
+notifications
+  id, user_id (FK → users), type (string), title (string),
+  message (text), data (JSON nullable), read_at (datetime nullable),
+  timestamps
+  INDEX(user_id, read_at)
+
 attendances
   id, event_id (FK → events), user_id (FK → users),
   check_in_time (datetime), method (facial|rfid|manual),
@@ -156,6 +165,11 @@ Public:
 Authenticated (all roles):
   GET  /api/user                              → Current user info
   POST /api/logout                            → Revoke token
+  GET  /api/notifications                     → My notifications (paginated)
+  GET  /api/notifications/unread-count        → Unread notification count
+  PATCH /api/notifications/{id}/read          → Mark notification as read
+  POST /api/notifications/mark-all-read       → Mark all notifications as read
+  DEL  /api/notifications/{id}                → Delete a notification
   GET  /api/events                            → List events (role-filtered)
   GET  /api/events/upcoming                   → Upcoming events
   GET  /api/events/{id}                       → Event detail with counts
@@ -311,6 +325,8 @@ SYSTEM FLOW — END TO END
       - Required: title, date (≥ today), start_time, end_time, venue
       - Optional: description, capacity, attendance_method (facial|rfid|manual|any), status
       - organizer_id set automatically from auth user
+      - Default status: 'upcoming' (set by frontend form)
+      - Triggers notification to all students about new event
    c. Edit event: PUT /api/events/{id} (ownership enforced for organizer)
    d. Status lifecycle: draft → upcoming → ongoing → completed
                                   ↕ archive/restore
@@ -324,7 +340,7 @@ SYSTEM FLOW — END TO END
    Event listing by role:
    - Admin: all events (excludes archived unless ?status=archived)
    - Organizer: own events only (scopeByOrganizer)
-   - Student: all events (excludes archived unless filtered)
+   - Student: only upcoming/ongoing/completed events (no draft)
    Search: ?search= filters by title or venue (LIKE)
    Sort: date DESC, start_time DESC. Paginated (default 15/page)
 
@@ -397,7 +413,28 @@ SYSTEM FLOW — END TO END
       - capacity_percentage (null if no capacity set)
    d. Play/pause toggle to control auto-refresh; manual refresh button
 
-8. REPORTS & ANALYTICS FLOW
+8. NOTIFICATION SYSTEM
+   a. Backend: notifications table with user_id, type, title, message, data (JSON), read_at
+   b. Types: new_event, check_in, enrollment_approved, enrollment_rejected
+   c. Triggers:
+      - Event creation (EventController@store): notifies all students
+      - Check-in (AttendanceController@recordAttendance): notifies the checked-in student
+      - Enrollment approve/reject (FacialEnrollmentController): notifies the student
+   d. API: GET /api/notifications (paginated), GET /api/notifications/unread-count,
+      PATCH /api/notifications/{id}/read, POST /api/notifications/mark-all-read,
+      DELETE /api/notifications/{id} — all scoped to authenticated user
+   e. Frontend: NotificationDropdown.jsx component in AppLayout navbar
+      - Polls unread count every 30 seconds
+      - Bell icon with red badge showing unread count (max 99+)
+      - Dropdown shows notification list with type-specific icons
+      - Mark as read, mark all as read, delete actions per notification
+      - Click notification → marks as read + navigates to relevant page:
+        * new_event/check_in: admin→/admin/events/:id, organizer→/organizer/events,
+          student→/student/events
+        * enrollment_approved/rejected: admin→/admin/enrollments, student→/student/enrollment
+      - Time-ago display (just now, Nm ago, Nh ago, Nd ago, or date)
+
+9. REPORTS & ANALYTICS FLOW
    a. Event Report: GET /api/reports/events/{id}
       → Returns event + organizer, attendees list, method breakdown
    b. Attendance Report: GET /api/reports/attendance
@@ -413,14 +450,14 @@ SYSTEM FLOW — END TO END
    f. Attendance Stats: GET /api/analytics/attendance
       → by_method, by_status, top_students (top 10), attendance_rates
 
-9. USER MANAGEMENT FLOW (Admin)
+10. USER MANAGEMENT FLOW (Admin)
    a. GET /api/users → paginated, filterable by ?role=, searchable by name/email/student_id
    b. POST /api/users → create user (name, email, password, role, student_id)
    c. PUT /api/users/{id} → update user (all fields optional, password stripped if empty)
    d. PATCH /api/users/{id}/role → change role only
    e. DELETE /api/users/{id} → hard delete
 
-10. DARK MODE
+11. DARK MODE
     a. ThemeContext reads localStorage "theme" key on load
     b. Falls back to system preference (prefers-color-scheme: dark)
     c. Toggles document.documentElement.classList "dark" + colorScheme CSS property
@@ -429,19 +466,22 @@ SYSTEM FLOW — END TO END
 
 API INTEGRATION STATUS (which pages use real API vs. mock data)
 ────────────────
-Connected to real API (10 pages):
+Connected to real API (14 pages):
   ✓ Landing                  → authAPI.login, authAPI.register
-  ✓ AppLayout                → AuthContext (logout, user info)
+  ✓ AppLayout                → AuthContext (logout, user info) + NotificationDropdown
+  ✓ NotificationDropdown     → notificationsAPI.* (polls unread count every 30s, click navigates)
   ✓ admin/EventMonitoring    → eventsAPI.getAll
   ✓ admin/EventDetail        → eventsAPI.getById, attendanceAPI.getByEvent, reportsAPI.exportCSV
-  ✓ organizer/ManageEvents   → eventsAPI.* (full CRUD, bulk archive/restore)
+  ✓ organizer/ManageEvents   → eventsAPI.* (full CRUD, bulk archive/restore, default status=upcoming)
   ✓ organizer/LiveDashboard  → attendanceAPI.getLiveDashboard (5s auto-refresh)
   ✓ organizer/CheckInStation → attendanceAPI.faceCheckIn/rfidCheckIn, enrollmentAPI.getEnrolledFaces
-  ✓ student/Events           → eventsAPI.getAll
+  ✓ student/Dashboard        → eventsAPI.getUpcoming, attendanceAPI.getMyAttendance, enrollmentAPI.getStatus
+  ✓ student/Events           → eventsAPI.getAll (sees only upcoming/ongoing/completed)
   ✓ student/EventCheckIn     → attendanceAPI.faceCheckIn/rfidCheckIn, enrollmentAPI.getStatus
   ✓ student/FacialEnrollment → enrollmentAPI.enroll
+  ✓ student/AttendanceHistory → attendanceAPI.getMyAttendance
 
-Using mock/hardcoded data (13 pages — need API integration):
+Using mock/hardcoded data (10 pages — need API integration):
   ✗ Profile                  → mockProfile (only name/email/role from AuthContext)
   ✗ Settings                 → setTimeout fake save, hardcoded toggles
   ✗ admin/Dashboard          → mockStats, mockRecentEvents, mockRecentActivity
@@ -453,8 +493,6 @@ Using mock/hardcoded data (13 pages — need API integration):
   ✗ organizer/Dashboard      → mockStats, mockMyEvents
   ✗ organizer/AttendanceMonitor → mockEvents, mockAttendees
   ✗ organizer/Reports        → mockReports, Recharts with static data
-  ✗ student/Dashboard        → mockStats, mockUpcomingEvents, mockRecentAttendance
-  ✗ student/AttendanceHistory → mockAttendance
 
 Redirect stubs (3):
   → auth/Login.jsx           → Navigate to / with { authModal: 'login' }
@@ -473,12 +511,17 @@ AuthController:
   user(Request)         → returns authenticated user object
 
 EventController:
-  index(Request)        → role-filtered: organizer=own, admin/student=all (excl archived)
+  index(Request)        → role-filtered: organizer=own, admin=all (excl archived),
+                           student=only upcoming/ongoing/completed (no draft)
+                           Normalizes legacy attendance_method values (face_recognition→facial, location→any)
                            supports ?status=, ?search= (title|venue LIKE), paginated 15/page
   upcoming()            → scopeUpcoming: date >= today, status in [upcoming, ongoing]
   show(Event)           → loads attendance counts (present, late, absent, total)
   store(Request)        → validates title, date ≥ today, times, venue, capacity, method, status
+                           Normalizes legacy attendance_method values before validation
+                           Sends notification to all students on event creation
   update(Request,Event) → ownership check for organizer, same validation
+                           Normalizes legacy attendance_method values before validation
   destroy(Request,Event)→ ownership check, hard delete
   archive(Request,Event)→ ownership check, status → "archived"
   restore(Request,Event)→ ownership check, archived → "upcoming"
@@ -496,6 +539,7 @@ AttendanceController:
   liveDashboard(Event)         → returns event+counts, recent 20 check-ins, method breakdown,
                                   capacity percentage
   recordAttendance (private)   → duplicate check (409), late if >15min, creates Attendance
+                                  sends check-in confirmation notification to student
 
 FacialEnrollmentController:
   enroll(Request)       → images_count (1-10), face_data (JSON string), status=pending
@@ -505,7 +549,9 @@ FacialEnrollmentController:
   destroy(Request)      → deletes current user's enrollment
   index(Request)        → admin: paginated(15), filterable by status/search
   approve(Request,FE)   → status=approved, reviewed_at, reviewed_by
+                           sends enrollment_approved notification to student
   reject(Request,FE)    → status=rejected, rejection_reason (max 500 chars)
+                           sends enrollment_rejected notification to student
   enrolledFaces()       → returns approved enrollments with face_data + user info
 
 UserController:
@@ -515,6 +561,13 @@ UserController:
   update(Request,User)  → all optional, uniqueness ignores current user
   destroy(User)         → hard delete
   updateRole(Request,User) → validates role enum, updates role only
+
+NotificationController:
+  index(Request)           → paginated list (20/page), ordered by created_at DESC
+  unreadCount(Request)     → returns { count: N } of unread notifications
+  markAsRead(Request,Notif)→ ownership check, sets read_at = now()
+  markAllAsRead(Request)   → marks all user's unread notifications as read
+  destroy(Request,Notif)   → ownership check, hard deletes notification
 
 AnalyticsController:
   dashboard()           → total_users/students/organizers/events, active_events, completed_events,
@@ -553,6 +606,12 @@ Attendance:
 FacialEnrollment:
   - user()       → BelongsTo(User)
   - reviewer()   → BelongsTo(User, 'reviewed_by')
+
+Notification:
+  - user()       → BelongsTo(User)
+  - markAsRead() → sets read_at = now() if not already read
+  - isRead()     → checks read_at not null
+  - static send(userId, type, title, message, data) → creates notification
 
 
 MIDDLEWARE
@@ -632,6 +691,7 @@ endpoints.js — grouped API functions:
   attendanceAPI: checkIn, manualCheckIn, rfidCheckIn, faceCheckIn, getByEvent,
                  getByStudent, getMyAttendance, getLiveDashboard
   enrollmentAPI: enroll, getStatus, delete, getAll, approve, reject, getEnrolledFaces
+  notificationsAPI: getAll, getUnreadCount, markAsRead, markAllAsRead, delete
   analyticsAPI:  getDashboard, getEventStats, getAttendanceStats
   reportsAPI:    getEventReport, getAttendanceReport, exportCSV
 
@@ -678,12 +738,13 @@ DATABASE MIGRATIONS (10 files)
   8. create_facial_enrollments_table  → Enrollment with approval workflow
   9. create_personal_access_tokens    → Sanctum tokens
   10. add_archived_status_to_events   → Adds "archived" to status enum
+  11. create_notifications_table      → Notifications with type, title, message, data, read_at
 
 
 SEEDED DATA SUMMARY
 ────────────────
   27 users:  1 admin, 5 organizers, 21 students (Filipino names, year-based IDs)
-  ~21 events: 12 completed, 1 ongoing, 8 upcoming (realistic university events)
+  ~22 events: 12 completed, 1 ongoing, 9 upcoming (realistic university events)
   ~240 attendance records across completed & ongoing events
   19 facial enrollments: 12 approved (with face_data), 5 pending, 2 rejected
 

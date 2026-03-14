@@ -71,3 +71,12 @@ export const reportsAPI = {
   getAttendanceReport: (params) => api.get('/api/reports/attendance', { params }),
   exportCSV: (eventId) => api.get(`/api/reports/events/${eventId}/export`, { responseType: 'blob' }),
 };
+
+// ── Notifications ──
+export const notificationsAPI = {
+  getAll: (params) => api.get('/api/notifications', { params }),
+  getUnreadCount: () => api.get('/api/notifications/unread-count'),
+  markAsRead: (id) => api.patch(`/api/notifications/${id}/read`),
+  markAllAsRead: () => api.post('/api/notifications/mark-all-read'),
+  delete: (id) => api.delete(`/api/notifications/${id}`),
+};

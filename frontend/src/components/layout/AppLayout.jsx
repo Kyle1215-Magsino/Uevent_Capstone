@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal } from '../ui';
+import NotificationDropdown from './NotificationDropdown';
 import { cn, getInitials } from '../../lib/utils';
 import {
   LayoutDashboard,
@@ -21,7 +22,6 @@ import {
   History,
   UserCircle,
   Shield,
-  Bell,
   CreditCard,
   Moon,
   Sun,
@@ -223,10 +223,7 @@ export default function AppLayout({ children }) {
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors dark:hover:text-slate-300 dark:hover:bg-slate-700">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-800" />
-              </button>
+              <NotificationDropdown />
 
               {/* Profile Dropdown */}
               <div className="relative" ref={profileRef}>

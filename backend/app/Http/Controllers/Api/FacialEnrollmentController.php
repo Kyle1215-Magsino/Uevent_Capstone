@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FacialEnrollment;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -106,6 +107,14 @@ class FacialEnrollmentController extends Controller
             'reviewed_by' => $request->user()->id,
         ]);
 
+        Notification::send(
+            $enrollment->user_id,
+            'enrollment_approved',
+            'Facial Enrollment Approved',
+            'Your facial recognition enrollment has been approved. You can now use face check-in for events.',
+            ['enrollment_id' => $enrollment->id]
+        );
+
         return response()->json($enrollment->load('user:id,name,email,student_id'));
     }
 
@@ -124,6 +133,15 @@ class FacialEnrollmentController extends Controller
             'reviewed_by' => $request->user()->id,
             'rejection_reason' => $validated['reason'] ?? null,
         ]);
+
+        $reason = $validated['reason'] ?? 'No reason provided.';
+        Notification::send(
+            $enrollment->user_id,
+            'enrollment_rejected',
+            'Facial Enrollment Rejected',
+            "Your facial enrollment was rejected. Reason: {$reason}. You may re-submit your enrollment.",
+            ['enrollment_id' => $enrollment->id]
+        );
 
         return response()->json($enrollment->load('user:id,name,email,student_id'));
     }

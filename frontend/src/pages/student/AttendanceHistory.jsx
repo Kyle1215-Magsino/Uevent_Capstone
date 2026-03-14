@@ -1,20 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader, SearchInput, StatusBadge, DataTable, StatsCard } from '../../components/ui';
 import { cn, formatDateTime, formatDate } from '../../lib/utils';
-import { History, Calendar, Clock, Filter, Download, ScanFace, CreditCard, ClipboardList, ClipboardCheck, TrendingUp, UserX } from 'lucide-react';
-
-const mockAttendance = [
-  { id: 1, event: 'CIT Week 2026: Opening Ceremony', date: '2026-03-09T08:00:00', checkIn: '2026-03-09T07:48:00', status: 'present', method: 'face' },
-  { id: 2, event: 'Parangal: Academic Honors Convocation', date: '2026-03-07T14:00:00', checkIn: '2026-03-07T13:52:00', status: 'present', method: 'rfid' },
-  { id: 3, event: 'Blood Donation Drive – Red Cross Partnership', date: '2026-03-04T08:00:00', checkIn: null, status: 'absent', method: '-' },
-  { id: 4, event: 'Research Colloquium: AI & Emerging Tech', date: '2026-02-25T09:00:00', checkIn: '2026-02-25T08:47:00', status: 'present', method: 'face' },
-  { id: 5, event: 'SSG General Assembly: 2nd Semester', date: '2026-02-18T14:00:00', checkIn: '2026-02-18T13:41:00', status: 'present', method: 'rfid' },
-  { id: 6, event: 'CIT Industry Immersion Fair', date: '2026-02-11T09:00:00', checkIn: '2026-02-11T09:06:00', status: 'present', method: 'face' },
-  { id: 7, event: 'Mental Health Awareness Webinar', date: '2026-02-06T10:00:00', checkIn: null, status: 'absent', method: '-' },
-  { id: 8, event: 'University Christmas Celebration 2025', date: '2025-12-17T17:00:00', checkIn: '2025-12-17T16:53:00', status: 'present', method: 'manual' },
-];
+import { attendanceAPI } from '../../api/endpoints';
+import { History, Calendar, Clock, Filter, Download, ScanFace, CreditCard, ClipboardList, ClipboardCheck, TrendingUp, UserX, Loader2 } from 'lucide-react';
 
 const methodIcon = {
+  facial: { icon: ScanFace, label: 'Face Recognition', color: 'text-violet-600' },
   face: { icon: ScanFace, label: 'Face Recognition', color: 'text-violet-600' },
   rfid: { icon: CreditCard, label: 'RFID', color: 'text-orange-600' },
   manual: { icon: ClipboardList, label: 'Manual', color: 'text-slate-600 dark:text-slate-300' },
@@ -24,30 +15,51 @@ const methodIcon = {
 export default function AttendanceHistory() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = mockAttendance.filter((a) => {
-    const matchSearch = a.event.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await attendanceAPI.getMyAttendance();
+        if (!cancelled) {
+          const records = res.data?.data || res.data || [];
+          setAttendance(Array.isArray(records) ? records : []);
+        }
+      } catch {
+        // silently handle
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = attendance.filter((a) => {
+    const eventName = a.event?.title || a.event || '';
+    const matchSearch = eventName.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || a.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const presentCount = mockAttendance.filter((a) => a.status === 'present').length;
-  const absentCount = mockAttendance.filter((a) => a.status === 'absent').length;
-  const rate = ((presentCount / mockAttendance.length) * 100).toFixed(1);
+  const presentCount = attendance.filter((a) => a.status === 'present').length;
+  const absentCount = attendance.filter((a) => a.status === 'absent').length;
+  const rate = attendance.length > 0 ? ((presentCount / attendance.length) * 100).toFixed(1) : '0.0';
 
   const columns = [
     {
       key: 'event',
       label: 'Event',
-      render: (val) => <p className="text-sm font-medium text-slate-900 dark:text-white">{val}</p>,
+      render: (val) => <p className="text-sm font-medium text-slate-900 dark:text-white">{val?.title || val}</p>,
     },
     {
-      key: 'date',
+      key: 'event',
       label: 'Event Date',
-      render: (val) => <span className="text-sm text-slate-500 dark:text-slate-400">{formatDate(val)}</span>,
+      render: (val) => <span className="text-sm text-slate-500 dark:text-slate-400">{val?.date ? formatDate(val.date) : '—'}</span>,
     },
     {
-      key: 'checkIn',
+      key: 'check_in_time',
       label: 'Check-in Time',
       render: (val) =>
         val ? (
@@ -93,11 +105,19 @@ export default function AttendanceHistory() {
         }
       />
 
+      {loading && (
+        <div className="card p-12 text-center">
+          <Loader2 className="w-8 h-8 text-primary-500 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-500 dark:text-slate-400">Loading attendance records...</p>
+        </div>
+      )}
+
+      {!loading && <>
       {/* Summary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Events"
-          value={mockAttendance.length}
+          value={attendance.length}
           icon={Calendar}
           iconColor="emerald"
         />
@@ -146,8 +166,9 @@ export default function AttendanceHistory() {
 
       {/* Attendance DataTable */}
       <div className="card">
-        <DataTable columns={columns} data={filtered} emptyMessage="No records found." pageSize={10} />
+        <DataTable columns={columns} data={filtered} emptyMessage="No attendance records yet." pageSize={10} />
       </div>
+      </>}
     </div>
   );
 }

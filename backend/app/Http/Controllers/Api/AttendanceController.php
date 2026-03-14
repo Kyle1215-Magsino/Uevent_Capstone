@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Event;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -179,6 +180,15 @@ class AttendanceController extends Controller
         ]);
 
         $attendance->load('user:id,name,email,student_id');
+
+        // Notify the student about successful check-in
+        Notification::send(
+            $userId,
+            'check_in',
+            'Check-in Confirmed',
+            'You have been checked in to "' . $event->title . '" as ' . $status . '.',
+            ['event_id' => $event->id, 'attendance_id' => $attendance->id]
+        );
 
         return response()->json($attendance, 201);
     }
